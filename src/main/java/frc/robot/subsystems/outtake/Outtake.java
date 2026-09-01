@@ -12,9 +12,14 @@ import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.motors.roller.RollerIOSim;
+import frc.robot.util.io.sensors.LaserCAN;
+import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
+import org.littletonrobotics.junction.Logger;
 
 public class Outtake extends SubsystemBase {
   private final Roller roller;
+  private final LaserCAN beambreak;
+  private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
 
   public Outtake() {
     RollerIO io =
@@ -32,13 +37,17 @@ public class Outtake extends SubsystemBase {
               0);
           case REPLAY -> new RollerIO() {};
         };
-
     roller = new Roller("Outtake", io);
+
+    // id is the same but on different bus
+    beambreak = new LaserCAN(Constants.CANConstants.OUTTAKE);
   }
 
   @Override
   public void periodic() {
     roller.periodic();
+    beambreak.updateInputs(beambreakInputs);
+    Logger.processInputs("Outtake/DistanceSensor", beambreakInputs);
   }
 
   public Command eject() {
@@ -47,5 +56,10 @@ public class Outtake extends SubsystemBase {
 
   public Command reverse() {
     return startEnd(() -> roller.runVelocity(OuttakeConstants.REVERSED_RPS), roller::stop);
+  }
+
+  public boolean hasGamePiece() {
+    return beambreakInputs.measurementValid
+        && beambreakInputs.distanceMillimeters <= OuttakeConstants.BEAMBREAK_THRESHOLD;
   }
 }

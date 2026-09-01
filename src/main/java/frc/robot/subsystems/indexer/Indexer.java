@@ -12,16 +12,21 @@ import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.motors.roller.RollerIOSim;
+import frc.robot.util.io.sensors.LaserCAN;
+import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
+import org.littletonrobotics.junction.Logger;
 
 public class Indexer extends SubsystemBase {
   private final Roller roller;
+  private final LaserCAN beambreak;
+  private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
 
   public Indexer() {
     RollerIO io =
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.OUTTAKE,
+                  Constants.CANConstants.INDEXER,
                   IndexerConstants.MOTOR_CONFIG)
               .build();
           case SIM -> new RollerIOSim(
@@ -32,13 +37,17 @@ public class Indexer extends SubsystemBase {
               0);
           case REPLAY -> new RollerIO() {};
         };
-
     roller = new Roller("Indexer", io);
+
+    // id is the same but on different bus
+    beambreak = new LaserCAN(Constants.CANConstants.INDEXER);
   }
 
   @Override
   public void periodic() {
     roller.periodic();
+    beambreak.updateInputs(beambreakInputs);
+    Logger.processInputs("Indexer/DistanceSensor", beambreakInputs);
   }
 
   public Command feed() {
@@ -47,5 +56,10 @@ public class Indexer extends SubsystemBase {
 
   public Command reverse() {
     return startEnd(() -> roller.runVelocity(IndexerConstants.REVERSED_RPS), roller::stop);
+  }
+
+  public boolean hasGamePiece() {
+    return beambreakInputs.measurementValid
+        && beambreakInputs.distanceMillimeters <= IndexerConstants.BEAMBREAK_THRESHOLD;
   }
 }

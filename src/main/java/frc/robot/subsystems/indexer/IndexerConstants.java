@@ -38,4 +38,6 @@ public final class IndexerConstants {
 
   public static final double RPS = 75;
   public static final double REVERSED_RPS = -50;
+
+  public static final double BEAMBREAK_THRESHOLD = 75; // mm
 }
