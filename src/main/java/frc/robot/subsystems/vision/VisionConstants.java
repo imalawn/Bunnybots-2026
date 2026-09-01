@@ -1,16 +1,24 @@
 package frc.robot.subsystems.vision;
 
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
-import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Filesystem;
+import java.io.IOException;
 
 public final class VisionConstants {
-  public static final AprilTagFieldLayout APRIL_TAG_LAYOUT =
-      AprilTagFieldLayout.loadField(
-          AprilTagFields
-              .k2026RebuiltAndymark); // Chesapeake = AndyMark, FIRST Championship = Welded
+  public static final AprilTagFieldLayout APRIL_TAG_LAYOUT;
+
+  static {
+    try {
+      APRIL_TAG_LAYOUT =
+          new AprilTagFieldLayout(
+              Filesystem.getDeployDirectory().toPath().resolve("bb-apriltag-layout.json"));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
   // Camera names, must match names configured on coprocessor
   public static final String CAMERA_0_NAME = "Front";
