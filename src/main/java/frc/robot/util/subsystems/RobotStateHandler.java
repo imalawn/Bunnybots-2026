@@ -6,7 +6,7 @@ import lombok.Getter;
 
 public class RobotStateHandler {
   private static RobotStateHandler instance;
-  @Getter private static boolean isEnabled;
+  @Getter private static boolean robotEnabled;
 
   public static synchronized RobotStateHandler getInstance() {
     if (instance == null) {
@@ -30,12 +30,12 @@ public class RobotStateHandler {
   }
 
   public void disable() {
-    isEnabled = false;
+    robotEnabled = false;
     subsystems.forEach(ExtendedSubsystem::disable);
   }
 
   public void enable() {
-    isEnabled = true;
+    robotEnabled = true;
     subsystems.forEach(ExtendedSubsystem::enable);
   }
 }

@@ -1,5 +1,8 @@
 package frc.robot.util.io.motors;
 
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.util.SparkUtil.tryUntilOk;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
@@ -17,9 +20,6 @@ import frc.robot.util.io.motors.elevator.LinearSystemIO;
 import frc.robot.util.io.motors.pivot.PivotIO;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.sensors.EncoderIO;
-
-import static edu.wpi.first.units.Units.*;
-import static frc.robot.util.SparkUtil.tryUntilOk;
 
 public class MotorIOSparkMax implements RollerIO, PivotIO, LinearSystemIO {
   private static final SparkBaseConfig coastConfig =

@@ -1,17 +1,16 @@
 package frc.robot.util.io.motors.pivot;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.io.motors.Motor;
 import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.sensors.EncoderIO;
-import frc.robot.util.subsystems.SubsystemManager;
-import org.littletonrobotics.junction.Logger;
-
+import frc.robot.util.subsystems.RobotStateHandler;
 import java.util.function.BooleanSupplier;
-
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.DegreesPerSecond;
+import org.littletonrobotics.junction.Logger;
 
 public class Pivot extends Motor<PivotIO, PivotIOInputsAutoLogged> {
   public Pivot(String name, PivotIO io, EncoderIO encoderIO, BooleanSupplier brakeMode) {
@@ -20,7 +19,7 @@ public class Pivot extends Motor<PivotIO, PivotIOInputsAutoLogged> {
   }
 
   public Pivot(String name, PivotIO io, EncoderIO encoderIO) {
-    this(name, io, encoderIO, SubsystemManager::isRobotEnabled);
+    this(name, io, encoderIO, RobotStateHandler::isRobotEnabled);
   }
 
   public Pivot(String name, PivotIO io) {

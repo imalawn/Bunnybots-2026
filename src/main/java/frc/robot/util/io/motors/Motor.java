@@ -4,10 +4,9 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
 import frc.robot.util.io.sensors.EncoderIO;
 import frc.robot.util.io.sensors.EncoderIOInputsAutoLogged;
+import java.util.function.BooleanSupplier;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
-
-import java.util.function.BooleanSupplier;
 
 public abstract class Motor<IOType extends MotorIO, InputsType extends MotorIO.MotorIOInputs> {
   protected final String name;

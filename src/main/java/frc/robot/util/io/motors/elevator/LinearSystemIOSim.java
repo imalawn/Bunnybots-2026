@@ -1,12 +1,12 @@
 package frc.robot.util.io.motors.elevator;
 
+import static edu.wpi.first.units.Units.Radians;
+
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
 import frc.robot.util.io.motors.MotorIOSim;
-
-import static edu.wpi.first.units.Units.Radians;
 
 public class LinearSystemIOSim extends MotorIOSim implements LinearSystemIO {
   private final ElevatorSim sim;

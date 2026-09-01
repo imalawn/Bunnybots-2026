@@ -1,13 +1,12 @@
 package frc.robot.util.io.motors.roller;
 
+import static edu.wpi.first.units.Units.RotationsPerSecond;
+
 import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.util.io.motors.Motor;
 import frc.robot.util.io.motors.MotorIO;
-import org.littletonrobotics.junction.Logger;
-
 import java.util.function.BooleanSupplier;
-
-import static edu.wpi.first.units.Units.RotationsPerSecond;
+import org.littletonrobotics.junction.Logger;
 
 public class Roller extends Motor<RollerIO, RollerIOInputsAutoLogged> {
   public Roller(String name, RollerIO io, BooleanSupplier brakeMode) {

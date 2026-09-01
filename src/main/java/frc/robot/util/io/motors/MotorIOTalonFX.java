@@ -1,5 +1,8 @@
 package frc.robot.util.io.motors;
 
+import static edu.wpi.first.units.Units.*;
+import static frc.robot.util.PhoenixUtil.tryUntilOk;
+
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.CANBus;
 import com.ctre.phoenix6.StatusSignal;
@@ -16,11 +19,7 @@ import frc.robot.util.io.motors.elevator.LinearSystemIO;
 import frc.robot.util.io.motors.pivot.PivotIO;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.sensors.EncoderIOCANcoder;
-
 import java.util.ArrayList;
-
-import static edu.wpi.first.units.Units.*;
-import static frc.robot.util.PhoenixUtil.tryUntilOk;
 
 public class MotorIOTalonFX implements AutoCloseable, RollerIO, PivotIO, LinearSystemIO {
   private final TalonFX leader;
@@ -116,8 +115,8 @@ public class MotorIOTalonFX implements AutoCloseable, RollerIO, PivotIO, LinearS
    * @param config The config to apply to the motors
    * @param followerIds The CAN IDs of the follower motors
    * @param followerAlignments The alignments of the follower motors relative to the leader
-   * @deprecated Use {@link Builder} instead, which provides a more streamlined setup
-   *     process with more customizability.
+   * @deprecated Use {@link Builder} instead, which provides a more streamlined setup process with
+   *     more customizability.
    */
   @Deprecated
   public MotorIOTalonFX(
@@ -135,8 +134,8 @@ public class MotorIOTalonFX implements AutoCloseable, RollerIO, PivotIO, LinearS
    * @param canbus The CAN bus this device is connected on
    * @param id The CAN ID of the leader motor
    * @param config The config to apply to the motors
-   * @deprecated Use {@link Builder} instead, which provides a more streamlined setup
-   *     process with more customizability.
+   * @deprecated Use {@link Builder} instead, which provides a more streamlined setup process with
+   *     more customizability.
    */
   @Deprecated
   public MotorIOTalonFX(CANBus canbus, int id, TalonFXConfiguration config) {

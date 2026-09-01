@@ -1,18 +1,17 @@
 package frc.robot.util.io.motors.elevator;
 
+import static edu.wpi.first.units.Units.*;
+
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.util.io.motors.Motor;
 import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.sensors.EncoderIO;
-import frc.robot.util.subsystems.SubsystemManager;
-import org.littletonrobotics.junction.Logger;
-
+import frc.robot.util.subsystems.RobotStateHandler;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
-
-import static edu.wpi.first.units.Units.*;
+import org.littletonrobotics.junction.Logger;
 
 public class LinearSystem extends Motor<LinearSystemIO, LinearSystemIOInputsAutoLogged> {
   private final Function<Distance, Angle> distanceToAngle;
@@ -81,7 +80,7 @@ public class LinearSystem extends Motor<LinearSystemIO, LinearSystemIOInputsAuto
     private final String name;
     private final LinearSystemIO io;
     private EncoderIO encoderIO = inputs -> {};
-    private BooleanSupplier brakeMode = SubsystemManager::isRobotEnabled;
+    private BooleanSupplier brakeMode = RobotStateHandler::isRobotEnabled;
     private Function<Distance, Angle> distanceToAngle;
 
     public Builder(String name, LinearSystemIO io) {
