@@ -8,6 +8,7 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
@@ -31,7 +32,8 @@ public class Indexer extends SubsystemBase {
               .build();
           case SIM -> new RollerIOSim(
               DCMotor.getKrakenX60(1),
-              IndexerConstants.CONSTRAINTS,
+              new MotorIO.RotationalMechanismConstraints(
+                  1, IndexerConstants.INDEXER_MOI, 0, 0, 0, 0),
               IndexerConstants.INDEXER_KP,
               IndexerConstants.INDEXER_KD,
               0);

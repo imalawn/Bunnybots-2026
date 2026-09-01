@@ -8,7 +8,6 @@ import edu.wpi.first.units.measure.Distance;
 import frc.robot.util.io.motors.Motor;
 import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.sensors.EncoderIO;
-import frc.robot.util.subsystems.RobotStateHandler;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import org.littletonrobotics.junction.Logger;
@@ -80,7 +79,7 @@ public class LinearSystem extends Motor<LinearSystemIO, LinearSystemIOInputsAuto
     private final String name;
     private final LinearSystemIO io;
     private EncoderIO encoderIO = inputs -> {};
-    private BooleanSupplier brakeMode = RobotStateHandler::isRobotEnabled;
+    private BooleanSupplier brakeMode = () -> true;
     private Function<Distance, Angle> distanceToAngle;
 
     public Builder(String name, LinearSystemIO io) {
