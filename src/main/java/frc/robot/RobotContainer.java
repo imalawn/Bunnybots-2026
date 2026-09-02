@@ -241,7 +241,13 @@ public class RobotContainer {
     Command reverseIndexer = indexer.reverse();
     Command reverseOuttake = outtake.reverse();
     // whileTrue, fully manual
-    Command feedToHopper = intake.handoff();
+    RobotUtil.RumbleRequest handoffFinished = new RobotUtil.RumbleRequest(0.8, 0, 5);
+    Command feedToHopper =
+        intake
+            .handoff()
+            .alongWith(
+                Commands.waitUntil(indexer::hasGamePiece)
+                    .andThen(() -> RobotUtil.requestOperatorRumble(handoffFinished)));
     Command intakeFromGround = intake.intakeFromGround();
     Command stowIntake = intake.stow();
 

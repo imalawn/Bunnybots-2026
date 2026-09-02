@@ -20,10 +20,9 @@ import frc.robot.util.io.motors.roller.RollerIOSim;
 import frc.robot.util.io.sensors.EncoderIO;
 import frc.robot.util.io.sensors.EncoderIOCANcoder;
 import frc.robot.util.subsystems.ExtendedSubsystem;
+import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
-
-import java.util.concurrent.atomic.AtomicReference;
 
 public class Intake extends ExtendedSubsystem {
   public enum PivotState {
@@ -135,10 +134,10 @@ public class Intake extends ExtendedSubsystem {
           runSetpoint(PivotState.HANDOFF);
           roller.runVelocity(IntakeConstants.ROLLER_RPS);
         },
-            () -> {
+        () -> {
           roller.stop();
           runSetpoint(previous.get());
-            });
+        });
   }
 
   public Command stow() {
