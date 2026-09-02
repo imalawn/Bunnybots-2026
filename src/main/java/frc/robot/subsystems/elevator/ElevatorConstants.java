@@ -33,7 +33,7 @@ public final class ElevatorConstants {
 
   public static final double MAX_MANUAL_VOLTAGE = 6.0;
   public static final double HOMING_VOLTAGE = 2.0;
-    public static final double HOMING_VELOCITY_THRESHOLD = 0.1; // placeholder, find this
+  public static final double HOMING_VELOCITY_THRESHOLD = 0.1; // placeholder, find this
 
   public static final MotorIO.LinearMechanismConstraints CONSTRAINTS =
       new MotorIO.LinearMechanismConstraints(1.68, 2.0, Units.inchesToMeters(2), 0, 2);

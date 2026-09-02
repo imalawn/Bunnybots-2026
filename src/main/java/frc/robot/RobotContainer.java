@@ -6,6 +6,9 @@ package frc.robot;
 
 import static frc.robot.Constants.currentMode;
 
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -17,12 +20,17 @@ import frc.robot.Constants.ControllerConstants;
 import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
+import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.BetterAutoChooser;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.RobotUtil;
 import frc.robot.util.io.GuitarHeroController;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleSupplier;
+import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -36,6 +44,9 @@ public class RobotContainer {
   // subsystems
   private final Drive drive;
   private final Vision vision;
+  private final Elevator elevator;
+  private final Indexer indexer;
+  private final Outtake outtake;
 
   // controllers
   private ControlScheme controlScheme = ControlScheme.MAIN;
@@ -53,13 +64,14 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
 
   // Simulated things
-  private SwerveDriveSimulation driveSimulation;
+  private final SwerveDriveSimulation driveSimulation;
   //  private SuperstructureSim superstructureSim;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
     switch (currentMode) {
       case REAL -> {
+        driveSimulation = null;
         drive =
             new Drive(
                 new GyroIOPigeon2(),
@@ -77,8 +89,15 @@ public class RobotContainer {
                     VisionConstants.CAMERA_1_NAME, VisionConstants.CAMERA_1_OFFSET),
                 new VisionIOPhotonVision(
                     VisionConstants.CAMERA_2_NAME, VisionConstants.CAMERA_2_OFFSET));
+        elevator = new Elevator();
+        indexer = new Indexer();
+        outtake = new Outtake();
       }
       case SIM -> {
+        driveSimulation =
+            new SwerveDriveSimulation(
+                Drive.getMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
+        SimulatedArena.getInstance().addDriveTrainSimulation(driveSimulation);
         drive =
             new Drive(
                 new GyroIOSim(driveSimulation.getGyroSimulation()) {},
@@ -102,9 +121,13 @@ public class RobotContainer {
                     VisionConstants.CAMERA_2_NAME,
                     VisionConstants.CAMERA_2_OFFSET,
                     driveSimulation::getSimulatedDriveTrainPose));
+        elevator = new Elevator();
+        indexer = new Indexer();
+        outtake = new Outtake();
       }
       default -> {
         /* REPLAY */
+        driveSimulation = null;
         drive =
             new Drive(
                 new GyroIO() {},
@@ -116,6 +139,9 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive, new VisionIO() {}, new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
+        elevator = new Elevator();
+        indexer = new Indexer();
+        outtake = new Outtake();
       }
     }
 
@@ -185,8 +211,34 @@ public class RobotContainer {
     // Reset gyro to 0°
     Command zeroGyro = Commands.runOnce(() -> drive.zeroGyro(true), drive).ignoringDisable(true);
 
+    // Elevator commands
+    DoubleSupplier elevatorJoystick =
+        () ->
+            -MathUtil.applyDeadband(
+                operatorController.getLeftY(), ControllerConstants.OPERATOR_DEADBAND);
+    Command manualElevator = elevator.manualControl(elevatorJoystick);
+    Command elevatorHoming = elevator.homingSequence();
+    Command stowElevator = elevator.stow();
+    Command ovenElevator = elevator.oven();
+    Command l1Elevator = elevator.l1();
+    Command l2Elevator = elevator.l2();
+
+    // Other superstructure commands
+    Command feedToHopper =
+        Commands.waitUntil(
+                () ->
+                    elevator.getSetpoint() == Elevator.Setpoint.STOWED
+                        && elevator.hasReachedSetpoint())
+            .andThen(indexer.feed());
+    Command ejectGamePiece = outtake.eject();
+    Command reverseIndexer = indexer.reverse();
+    Command reverseOuttake = outtake.reverse();
+
     // Default command, normal field-relative drive
     useDefaultDrive();
+
+    // elevator override
+    new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0).whileTrue(manualElevator);
 
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);
@@ -197,7 +249,6 @@ public class RobotContainer {
       driverController.x().whileTrue(lockWheels);
       driverController.povLeft().onTrue(zeroGyro);
 
-      ;
     } else {
       /* driver controls */
       driverController.x().whileTrue(lockWheels);

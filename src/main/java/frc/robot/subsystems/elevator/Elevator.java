@@ -102,40 +102,43 @@ public class Elevator extends ExtendedSubsystem {
               Logger.recordOutput("Elevator/State", "MANUAL");
             },
             () -> {
-                double magnitude = joystick.getAsDouble();
-                elevator.runVoltage(Math.copySign(magnitude*magnitude, magnitude) * ElevatorConstants.MAX_MANUAL_VOLTAGE);
+              double magnitude = joystick.getAsDouble();
+              elevator.runVoltage(
+                  Math.copySign(magnitude * magnitude, magnitude)
+                      * ElevatorConstants.MAX_MANUAL_VOLTAGE);
             })
         .withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
   }
 
-    public Command homingSequence() {
-        Debouncer homingDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kRising);
-        Timer homingTimer = new Timer();
+  public Command homingSequence() {
+    Debouncer homingDebouncer = new Debouncer(0.5, Debouncer.DebounceType.kRising);
+    Timer homingTimer = new Timer();
 
-        return startRun(
-                () -> {
-                    runSetpoint(Setpoint.NONE);
-                    Logger.recordOutput("Elevator/State", "HOMING");
-                    elevator.runVoltage(-ElevatorConstants.HOMING_VOLTAGE);
-                },
-                () -> {
-                    if (homingDebouncer.calculate(
-                            elevator.getVelocityRadPerSec() <= ElevatorConstants.HOMING_VELOCITY_THRESHOLD)
-                            && !homingTimer.isRunning()) {
-                        elevator.stop();
-                        elevator.resetPosition(Rotations.of(0));
-                        // wait for operation to finish
-                        homingTimer.start();
-                    }
-                })
-                .until(() -> homingTimer.hasElapsed(0.101))
-                .finallyDo(
-                        () -> {
-                            homingTimer.stop();
-                            homingTimer.reset();
-                            runSetpoint(Setpoint.STOWED);
-                        });
-    }
+    return startRun(
+            () -> {
+              runSetpoint(Setpoint.NONE);
+              Logger.recordOutput("Elevator/State", "HOMING");
+              elevator.runVoltage(-ElevatorConstants.HOMING_VOLTAGE);
+            },
+            () -> {
+              if (homingDebouncer.calculate(
+                      elevator.getVelocityRadPerSec()
+                          <= ElevatorConstants.HOMING_VELOCITY_THRESHOLD)
+                  && !homingTimer.isRunning()) {
+                elevator.stop();
+                elevator.resetPosition(Rotations.of(0));
+                // wait for operation to finish
+                homingTimer.start();
+              }
+            })
+        .until(() -> homingTimer.hasElapsed(0.101))
+        .finallyDo(
+            () -> {
+              homingTimer.stop();
+              homingTimer.reset();
+              runSetpoint(Setpoint.STOWED);
+            });
+  }
 
   public double getPositionRad() {
     return elevator.getPositionRad();
