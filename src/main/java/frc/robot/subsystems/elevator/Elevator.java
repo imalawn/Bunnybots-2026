@@ -10,6 +10,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
+import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.elevator.LinearSystem;
 import frc.robot.util.io.motors.elevator.LinearSystemIO;
@@ -50,7 +51,12 @@ public class Elevator extends ExtendedSubsystem {
               .build();
           case SIM -> new LinearSystemIOSim(
               DCMotor.getKrakenX60(1),
-              ElevatorConstants.CONSTRAINTS,
+              new MotorIO.LinearMechanismConstraints(
+                  ElevatorConstants.GEAR_RATIO,
+                  ElevatorConstants.CARRIAGE_MASS,
+                  ElevatorConstants.DRUM_RADIUS,
+                  ElevatorConstants.MIN_HEIGHT_METERS,
+                  ElevatorConstants.MAX_HEIGHT_METERS),
               ElevatorConstants.ELEVATOR_KP,
               ElevatorConstants.ELEVATOR_KD,
               0);
@@ -58,7 +64,7 @@ public class Elevator extends ExtendedSubsystem {
         };
     elevator =
         new LinearSystem.Builder("Elevator", io)
-            .setDrumRadius(ElevatorConstants.CONSTRAINTS.drumRadiusMeters())
+            .setDrumRadius(ElevatorConstants.DRUM_RADIUS)
             .setBrakeMode(() -> !coastOverride)
             .build();
 

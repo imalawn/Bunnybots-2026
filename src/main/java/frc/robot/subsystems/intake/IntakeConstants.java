@@ -20,9 +20,10 @@ public final class IntakeConstants {
     SETPOINTS.put(GROUND, Degrees.of(129.0));
   }
 
+  public static final double STOW_DELAY = 1.0;
+
   public static final double ROLLER_RPS = 5000 / 60.0;
   public static final double ROLLER_RPS_REVERSED = -4500 / 60.0;
-  public static final double ROLLER_RPS_SLOW = 4000 / 60.0;
 
   // sim
   public static final int INTAKE_CAPACITY = 50;

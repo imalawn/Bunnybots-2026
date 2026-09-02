@@ -10,13 +10,11 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
-import frc.robot.util.io.motors.MotorIO;
 import java.util.EnumMap;
 
 public final class ElevatorConstants {
   public static Angle metersToRotations(Distance meters) {
-    return Rotations.of(
-        Units.radiansToRotations(meters.in(Meters) / CONSTRAINTS.drumRadiusMeters()));
+    return Rotations.of(Units.radiansToRotations(meters.in(Meters) / DRUM_RADIUS));
   }
 
   public static final EnumMap<Elevator.Setpoint, Angle> SETPOINTS =
@@ -35,8 +33,12 @@ public final class ElevatorConstants {
   public static final double HOMING_VOLTAGE = 2.0;
   public static final double HOMING_VELOCITY_THRESHOLD = 0.1; // placeholder, find this
 
-  public static final MotorIO.LinearMechanismConstraints CONSTRAINTS =
-      new MotorIO.LinearMechanismConstraints(1.68, 2.0, Units.inchesToMeters(2), 0, 2);
+  // physical constraints
+  public static final double GEAR_RATIO = 1.68;
+  public static final double CARRIAGE_MASS = 2.0; // kg
+  public static final double DRUM_RADIUS = Units.inchesToMeters(2);
+  public static final double MIN_HEIGHT_METERS = 0;
+  public static final double MAX_HEIGHT_METERS = Units.inchesToMeters(48);
 
   public static final double ELEVATOR_KP = 100;
   public static final double ELEVATOR_KD = 0;
@@ -56,7 +58,7 @@ public final class ElevatorConstants {
           .withFeedback(
               new FeedbackConfigs()
                   .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
-                  .withSensorToMechanismRatio(CONSTRAINTS.reduction()))
+                  .withSensorToMechanismRatio(GEAR_RATIO))
           .withSlot0(
               new Slot0Configs()
                   .withKP(ELEVATOR_KP)

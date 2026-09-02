@@ -8,6 +8,8 @@ import com.ctre.phoenix6.controls.PositionVoltage;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.util.io.motors.MotorIO;
 import frc.robot.util.io.motors.MotorIOTalonFX;
@@ -20,7 +22,6 @@ import frc.robot.util.io.motors.roller.RollerIOSim;
 import frc.robot.util.io.sensors.EncoderIO;
 import frc.robot.util.io.sensors.EncoderIOCANcoder;
 import frc.robot.util.subsystems.ExtendedSubsystem;
-import java.util.concurrent.atomic.AtomicReference;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;
 
@@ -118,26 +119,25 @@ public class Intake extends ExtendedSubsystem {
   }
 
   public Command intakeFromGround() {
+    Command delayedStow = Commands.waitSeconds(IntakeConstants.STOW_DELAY).andThen(stow());
     return startEnd(
         () -> {
           runSetpoint(PivotState.GROUND);
           roller.runVelocity(IntakeConstants.ROLLER_RPS);
         },
-        roller::stop);
+        () -> {
+          roller.stop();
+          CommandScheduler.getInstance().schedule(delayedStow);
+        });
   }
 
   public Command handoff() {
-    AtomicReference<PivotState> previous = new AtomicReference<>();
     return startEnd(
         () -> {
-          previous.set(pivotState);
           runSetpoint(PivotState.HANDOFF);
           roller.runVelocity(IntakeConstants.ROLLER_RPS);
         },
-        () -> {
-          roller.stop();
-          runSetpoint(previous.get());
-        });
+        roller::stop);
   }
 
   public Command stow() {
