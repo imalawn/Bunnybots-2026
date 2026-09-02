@@ -33,7 +33,7 @@ public final class IndexerConstants {
                   .withKI(0)
                   .withKD(INDEXER_KD)
                   .withKS(0)
-                  .withKV(0)
+                  .withKV(0.12)
                   .withKA(0));
 
   public static final double BEAMBREAK_THRESHOLD = 75; // mm

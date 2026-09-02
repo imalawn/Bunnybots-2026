@@ -55,12 +55,19 @@ public final class Constants {
   }
 
   public static final class CANConstants {
+    // superstructure canbus
     public static final CANBus SUPERSTRUCTURE = new CANBus("Superstructure");
-
     public static final int ELEVATOR_LEADER = 1;
     public static final int ELEVATOR_FOLLOWER = 2;
-    public static final int INDEXER = 3;
-    public static final int OUTTAKE = 4;
+    public static final int OUTTAKE_LEFT = 3;
+    public static final int OUTTAKE_RIGHT = 4;
+    public static final int INDEXER = 5;
+    public static final int INTAKE_PIVOT = 6;
+    public static final int INTAKE_ROLLER = 7;
+    public static final int INTAKE_ENCODER = 8;
+    // rio canbus
+    public static final int INDEXER_LASERCAN = 20;
+    public static final int OUTTAKE_LASERCAN = 21;
   }
 
   public static final class FieldConstants {

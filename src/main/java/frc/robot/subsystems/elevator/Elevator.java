@@ -21,11 +21,17 @@ import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends ExtendedSubsystem {
   public enum Setpoint {
-    NONE,
-    STOWED,
-    OVEN,
-    L1,
-    L2
+    NONE(false),
+    STOWED(false),
+    OVEN(true),
+    L1(true),
+    L2(true);
+
+    public final boolean isForScoring;
+
+    Setpoint(boolean forScoring) {
+      this.isForScoring = forScoring;
+    }
   }
 
   private final LinearSystem elevator;
@@ -55,6 +61,8 @@ public class Elevator extends ExtendedSubsystem {
             .setDrumRadius(ElevatorConstants.CONSTRAINTS.drumRadiusMeters())
             .setBrakeMode(() -> !coastOverride)
             .build();
+
+    Logger.recordOutput("Elevator/State", this.setpoint.toString());
   }
 
   @Override
@@ -76,23 +84,23 @@ public class Elevator extends ExtendedSubsystem {
     elevator.runPosition(newSetpoint);
     this.setpoint = setpoint;
     this.setpointRad = newSetpoint.in(Radians);
-    Logger.recordOutput("Elevator/State", this.setpoint);
+    Logger.recordOutput("Elevator/State", this.setpoint.toString());
   }
 
   public Command stow() {
-    return runOnce(() -> runSetpoint(Setpoint.STOWED));
+    return startEnd(() -> runSetpoint(Setpoint.STOWED), () -> {}).until(this::hasReachedSetpoint);
   }
 
   public Command oven() {
-    return runOnce(() -> runSetpoint(Setpoint.OVEN));
+    return startEnd(() -> runSetpoint(Setpoint.OVEN), () -> {}).until(this::hasReachedSetpoint);
   }
 
   public Command l1() {
-    return runOnce(() -> runSetpoint(Setpoint.L1));
+    return startEnd(() -> runSetpoint(Setpoint.L1), () -> {}).until(this::hasReachedSetpoint);
   }
 
   public Command l2() {
-    return runOnce(() -> runSetpoint(Setpoint.L2));
+    return startEnd(() -> runSetpoint(Setpoint.L2), () -> {}).until(this::hasReachedSetpoint);
   }
 
   public Command manualControl(DoubleSupplier joystick) {

@@ -22,6 +22,7 @@ import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.indexer.Indexer;
+import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.BetterAutoChooser;
@@ -45,8 +46,9 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
   private final Elevator elevator;
-  private final Indexer indexer;
   private final Outtake outtake;
+  private final Indexer indexer;
+  private final Intake intake;
 
   // controllers
   private ControlScheme controlScheme = ControlScheme.MAIN;
@@ -90,8 +92,9 @@ public class RobotContainer {
                 new VisionIOPhotonVision(
                     VisionConstants.CAMERA_2_NAME, VisionConstants.CAMERA_2_OFFSET));
         elevator = new Elevator();
-        indexer = new Indexer();
         outtake = new Outtake();
+        indexer = new Indexer();
+        intake = new Intake();
       }
       case SIM -> {
         driveSimulation =
@@ -122,8 +125,9 @@ public class RobotContainer {
                     VisionConstants.CAMERA_2_OFFSET,
                     driveSimulation::getSimulatedDriveTrainPose));
         elevator = new Elevator();
-        indexer = new Indexer();
         outtake = new Outtake();
+        indexer = new Indexer();
+        intake = new Intake();
       }
       default -> {
         /* REPLAY */
@@ -140,8 +144,9 @@ public class RobotContainer {
             new Vision(
                 drive, new VisionIO() {}, new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
         elevator = new Elevator();
-        indexer = new Indexer();
         outtake = new Outtake();
+        indexer = new Indexer();
+        intake = new Intake();
       }
     }
 
@@ -206,12 +211,13 @@ public class RobotContainer {
     RobotUtil.setDriverController(driverController);
     RobotUtil.setOperatorController(operatorController);
 
+    /* Drive commands */
     // Lock wheels to X pattern
     Command lockWheels = Commands.startEnd(drive::stopWithX, () -> {}, drive);
     // Reset gyro to 0°
     Command zeroGyro = Commands.runOnce(() -> drive.zeroGyro(true), drive).ignoringDisable(true);
 
-    // Elevator commands
+    /* Elevator commands */
     DoubleSupplier elevatorJoystick =
         () ->
             -MathUtil.applyDeadband(
@@ -223,8 +229,9 @@ public class RobotContainer {
     Command l1Elevator = elevator.l1();
     Command l2Elevator = elevator.l2();
 
-    // Other superstructure commands
-    Command feedToHopper =
+    /* Other superstructure commands */
+    // whileTrue, manual override of trigger
+    Command feedToOuttake =
         Commands.waitUntil(
                 () ->
                     elevator.getSetpoint() == Elevator.Setpoint.STOWED
@@ -233,6 +240,10 @@ public class RobotContainer {
     Command ejectGamePiece = outtake.eject();
     Command reverseIndexer = indexer.reverse();
     Command reverseOuttake = outtake.reverse();
+    // whileTrue, fully manual
+    Command feedToHopper = intake.handoff();
+    Command intakeFromGround = intake.intakeFromGround();
+    Command stowIntake = intake.stow();
 
     // Default command, normal field-relative drive
     useDefaultDrive();
@@ -249,6 +260,14 @@ public class RobotContainer {
                     && elevator.hasReachedSetpoint())
         .debounce(0.1)
         .whileTrue(indexer.feed());
+
+    // sterilize held game piece
+    new Trigger(
+            () ->
+                outtake.hasGamePiece()
+                    && elevator.getSetpoint().isForScoring
+                    && !elevator.hasReachedSetpoint())
+        .whileTrue(outtake.sterilize());
 
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);

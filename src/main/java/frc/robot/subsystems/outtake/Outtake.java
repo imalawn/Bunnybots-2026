@@ -18,20 +18,21 @@ import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
 import org.littletonrobotics.junction.Logger;
 
 public class Outtake extends SubsystemBase {
-  private final Roller roller;
+  private final Roller leftRoller;
+  private final Roller rightRoller;
   private final LaserCAN beambreak;
   private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
 
   public Outtake() {
-    RollerIO io =
+    RollerIO leftIO =
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.OUTTAKE,
+                  Constants.CANConstants.OUTTAKE_LEFT,
                   OuttakeConstants.MOTOR_CONFIG)
               .build();
           case SIM -> new RollerIOSim(
-              DCMotor.getKrakenX60(1),
+              DCMotor.getKrakenX44(1),
               new MotorIO.RotationalMechanismConstraints(
                   1, OuttakeConstants.OUTTAKE_MOI, 0, 0, 0, 0),
               OuttakeConstants.OUTTAKE_KP,
@@ -39,25 +40,62 @@ public class Outtake extends SubsystemBase {
               0);
           case REPLAY -> new RollerIO() {};
         };
-    roller = new Roller("Outtake", io);
+    RollerIO rightIO =
+        switch (Constants.currentMode) {
+          case REAL -> new MotorIOTalonFX.Builder(
+                  Constants.CANConstants.SUPERSTRUCTURE,
+                  Constants.CANConstants.OUTTAKE_RIGHT,
+                  OuttakeConstants.MOTOR_CONFIG)
+              .build();
+          case SIM -> new RollerIOSim(
+              DCMotor.getKrakenX44(1),
+              new MotorIO.RotationalMechanismConstraints(
+                  1, OuttakeConstants.OUTTAKE_MOI, 0, 0, 0, 0),
+              OuttakeConstants.OUTTAKE_KP,
+              OuttakeConstants.OUTTAKE_KD,
+              0);
+          case REPLAY -> new RollerIO() {};
+        };
+    leftRoller = new Roller("Outtake/Left", leftIO);
+    rightRoller = new Roller("Outtake/Right", rightIO);
 
     // id is the same but on different bus
-    beambreak = new LaserCAN(Constants.CANConstants.OUTTAKE);
+    beambreak = new LaserCAN(Constants.CANConstants.OUTTAKE_LASERCAN);
   }
 
   @Override
   public void periodic() {
-    roller.periodic();
+    leftRoller.periodic();
+    rightRoller.periodic();
     beambreak.updateInputs(beambreakInputs);
     Logger.processInputs("Outtake/DistanceSensor", beambreakInputs);
   }
 
+  private void runTogether(double rps) {
+    leftRoller.runVelocity(rps);
+    rightRoller.runVelocity(rps);
+  }
+
+  private void stop() {
+    leftRoller.stop();
+    rightRoller.stop();
+  }
+
+  public Command sterilize() {
+    return startEnd(
+        () -> {
+          leftRoller.runVelocity(OuttakeConstants.STERILIZATION_RPS);
+          rightRoller.runVelocity(-OuttakeConstants.STERILIZATION_RPS);
+        },
+        this::stop);
+  }
+
   public Command eject() {
-    return startEnd(() -> roller.runVelocity(OuttakeConstants.RPS), roller::stop);
+    return startEnd(() -> runTogether(OuttakeConstants.RPS), this::stop);
   }
 
   public Command reverse() {
-    return startEnd(() -> roller.runVelocity(OuttakeConstants.REVERSED_RPS), roller::stop);
+    return startEnd(() -> runTogether(OuttakeConstants.REVERSED_RPS), this::stop);
   }
 
   public boolean hasGamePiece() {

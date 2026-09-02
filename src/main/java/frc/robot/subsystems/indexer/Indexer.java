@@ -42,7 +42,7 @@ public class Indexer extends SubsystemBase {
     roller = new Roller("Indexer", io);
 
     // id is the same but on different bus
-    beambreak = new LaserCAN(Constants.CANConstants.INDEXER);
+    beambreak = new LaserCAN(Constants.CANConstants.INDEXER_LASERCAN);
   }
 
   @Override
