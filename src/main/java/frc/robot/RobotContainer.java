@@ -240,6 +240,16 @@ public class RobotContainer {
     // elevator override
     new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0).whileTrue(manualElevator);
 
+    // queue game pieces in hopper
+    new Trigger(
+            () ->
+                indexer.hasGamePiece()
+                    && !outtake.hasGamePiece()
+                    && elevator.getSetpoint() == Elevator.Setpoint.STOWED
+                    && elevator.hasReachedSetpoint())
+        .debounce(0.1)
+        .whileTrue(indexer.feed());
+
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);
     }
