@@ -56,7 +56,8 @@ public final class IntakeConstants {
               new FeedbackConfigs()
                   .withFeedbackSensorSource(FeedbackSensorSourceValue.FusedCANcoder)
                   .withFeedbackRemoteSensorID(Constants.CANConstants.INTAKE_ENCODER)
-                  .withRotorToSensorRatio(PIVOT_GEAR_RATIO))
+                  .withRotorToSensorRatio(20)
+                  .withSensorToMechanismRatio(48.0 / 18.0))
           .withSlot0(
               new Slot0Configs()
                   .withKP(PIVOT_KP)
