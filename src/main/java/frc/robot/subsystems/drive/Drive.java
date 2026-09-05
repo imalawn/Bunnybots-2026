@@ -39,7 +39,6 @@ import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
@@ -59,7 +58,6 @@ import frc.robot.util.subsystems.ExtendedSubsystem;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import lombok.Getter;
 import org.ironmaple.simulation.drivesims.COTS;
 import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
@@ -79,7 +77,7 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
               Math.hypot(TunerConstants.BackLeft.LocationX, TunerConstants.BackLeft.LocationY),
               Math.hypot(TunerConstants.BackRight.LocationX, TunerConstants.BackRight.LocationY)));
   private static final double SLOW_SPEED_LIMIT =
-      0.5 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+      0.35 * TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
   private static final double ANGULAR_VELOCITY_COEFFICIENT = 0.15;
   static final double ANTI_JITTER_THRESHOLD = Constants.currentMode == Mode.REAL ? 4.0 * 0.01 : -1;
 
@@ -102,9 +100,6 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
 
   public static final PathConstraints CONSTRAINTS =
       new PathConstraints(3.0, 4.0, Units.degreesToRadians(640), Units.degreesToRadians(1080));
-
-  private static final TrajectoryConfig TRAJECTORY_CONFIG =
-      new TrajectoryConfig(CONSTRAINTS.maxVelocity(), CONSTRAINTS.maxAcceleration());
 
   private static DriveTrainSimulationConfig mapleSimConfig = null;
 
@@ -191,12 +186,12 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
         this);
     Pathfinding.setPathfinder(new LocalADStarAK());
     PathPlannerLogging.setLogActivePathCallback(
-        (activePath) -> {
+        activePath -> {
           Logger.recordOutput("Odometry/Trajectory", activePath.toArray(new Pose2d[0]));
           field.getObject("path").setPoses(activePath);
         });
     PathPlannerLogging.setLogTargetPoseCallback(
-        (targetPose) -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
+        targetPose -> Logger.recordOutput("Odometry/TrajectorySetpoint", targetPose));
     SmartDashboard.putData(field);
 
     // Configure SysId
@@ -206,9 +201,9 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
                 null,
                 null,
                 null,
-                (state) -> Logger.recordOutput("Drive/SysIdState", state.toString())),
+                state -> Logger.recordOutput("Drive/SysIdState", state.toString())),
             new SysIdRoutine.Mechanism(
-                (voltage) -> runCharacterization(voltage.in(Volts)), null, this));
+                voltage -> runCharacterization(voltage.in(Volts)), null, this));
   }
 
   @Override
@@ -325,20 +320,8 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
   public Command driveToPose(Pose2d targetPose) {
     return defer(
         () -> {
-          Logger.recordOutput("AutoControl/TargetPose", targetPose);
+          Logger.recordOutput("Drive/TargetPose", targetPose);
           return AutoBuilder.pathfindToPose(targetPose, CONSTRAINTS, 0.0);
-        });
-  }
-
-  /**
-   * Returns a command to drive to the pose provided by the given supplier at the moment the command
-   * is scheduled.
-   */
-  public Command driveToPose(Supplier<Pose2d> targetPose) {
-    return defer(
-        () -> {
-          Logger.recordOutput("AutoControl/TargetPose", targetPose.get());
-          return AutoBuilder.pathfindToPose(targetPose.get(), CONSTRAINTS, 0.0);
         });
   }
 
