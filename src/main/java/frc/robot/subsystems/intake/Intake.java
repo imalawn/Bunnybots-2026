@@ -6,6 +6,7 @@ import static frc.robot.subsystems.intake.IntakeConstants.SETPOINTS;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
 import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -37,6 +38,7 @@ public class Intake extends ExtendedSubsystem {
   private final Pivot pivot;
 
   @Getter private PivotState pivotState = PivotState.STOWED;
+  private double pivotSetpointDeg;
 
   public Intake() {
     PivotIO pivotIO =
@@ -102,8 +104,7 @@ public class Intake extends ExtendedSubsystem {
 
   @Override
   public void enable() {
-    pivot.stop();
-    roller.stop();
+    disable();
   }
 
   @Override
@@ -113,9 +114,16 @@ public class Intake extends ExtendedSubsystem {
   }
 
   private void runSetpoint(PivotState newState) {
-    pivot.runPosition(SETPOINTS.get(newState));
+    Angle newSetpoint = SETPOINTS.get(newState);
+    pivot.runPosition(newSetpoint);
     pivotState = newState;
-    Logger.recordOutput("Intake/State", pivotState.toString());
+    pivotSetpointDeg = newSetpoint.in(Degrees);
+    Logger.recordOutput("Intake/PivotState", pivotState.toString());
+  }
+
+  private void reset() {
+    runSetpoint(PivotState.STOWED);
+    roller.stop();
   }
 
   public Command intakeFromGround() {
@@ -132,24 +140,31 @@ public class Intake extends ExtendedSubsystem {
   }
 
   public Command handoff() {
+    return startEnd(() -> runSetpoint(PivotState.HANDOFF), this::reset)
+        .alongWith(
+            Commands.waitUntil(this::hasPivotReachedSetpoint)
+                .andThen(() -> roller.runVelocity(IntakeConstants.ROLLER_RPS)));
+  }
+
+  public Command handOffBackup() {
     return startEnd(
         () -> {
           runSetpoint(PivotState.HANDOFF);
           roller.runVelocity(IntakeConstants.ROLLER_RPS);
         },
-        roller::stop);
+        this::reset);
   }
 
   public Command stow() {
-    return runOnce(
-        () -> {
-          runSetpoint(PivotState.STOWED);
-          roller.stop();
-        });
+    return runOnce(this::reset);
   }
 
   public double getPivotPosition() {
     return pivot.getPositionDeg();
+  }
+
+  public boolean hasPivotReachedSetpoint() {
+    return Math.abs(pivotSetpointDeg - getPivotPosition()) < IntakeConstants.SETPOINT_TOLERANCE;
   }
 
   public double getRollerRPS() {

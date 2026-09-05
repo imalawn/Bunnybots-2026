@@ -8,10 +8,11 @@ import com.ctre.phoenix6.signals.*;
 import edu.wpi.first.units.measure.Angle;
 import frc.robot.Constants;
 import java.util.EnumMap;
+import java.util.Map;
 
 public final class IntakeConstants {
   // setpoints, in degrees
-  public static final EnumMap<Intake.PivotState, Angle> SETPOINTS =
+  public static final Map<Intake.PivotState, Angle> SETPOINTS =
       new EnumMap<>(Intake.PivotState.class);
 
   static {
@@ -20,6 +21,7 @@ public final class IntakeConstants {
     SETPOINTS.put(GROUND, Degrees.of(129.0));
   }
 
+  public static final double SETPOINT_TOLERANCE = 5.0; // deg
   public static final double STOW_DELAY = 1.0;
 
   public static final double ROLLER_RPS = 5000 / 60.0;

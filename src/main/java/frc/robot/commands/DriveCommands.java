@@ -31,6 +31,7 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
+  private static final double MAX_ACCELERATION = 1.0;
   private static final double ANGLE_KP = 3.0;
   private static final double ANGLE_KD = 0.4;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
@@ -64,11 +65,15 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
+    SlewRateLimiter xLimiter = new SlewRateLimiter(MAX_ACCELERATION);
+    SlewRateLimiter yLimiter = new SlewRateLimiter(MAX_ACCELERATION);
     return Commands.run(
         () -> {
           // Get linear velocity
           Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
+              getLinearVelocityFromJoysticks(
+                  xLimiter.calculate(xSupplier.getAsDouble()),
+                  yLimiter.calculate(ySupplier.getAsDouble()));
 
           // Apply rotation deadband
           double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
@@ -234,12 +239,7 @@ public class DriveCommands {
             }),
 
         // Allow modules to orient
-        Commands.run(
-                () -> {
-                  drive.runCharacterization(0.0);
-                },
-                drive)
-            .withTimeout(FF_START_DELAY),
+        Commands.run(() -> drive.runCharacterization(0.0), drive).withTimeout(FF_START_DELAY),
 
         // Start timer
         Commands.runOnce(timer::restart),
@@ -287,10 +287,7 @@ public class DriveCommands {
         // Drive control sequence
         Commands.sequence(
             // Reset acceleration limiter
-            Commands.runOnce(
-                () -> {
-                  limiter.reset(0.0);
-                }),
+            Commands.runOnce(() -> limiter.reset(0.0)),
 
             // Turn in place, accelerating up to full speed
             Commands.run(

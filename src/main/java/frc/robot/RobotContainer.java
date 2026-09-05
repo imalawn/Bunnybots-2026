@@ -248,6 +248,7 @@ public class RobotContainer {
             .alongWith(
                 Commands.waitUntil(indexer::hasGamePiece)
                     .andThen(() -> RobotUtil.requestOperatorRumble(handoffFinished)));
+    Command hopperFeedBackup = intake.handOffBackup();
     Command intakeFromGround = intake.intakeFromGround();
     Command stowIntake = intake.stow();
 
