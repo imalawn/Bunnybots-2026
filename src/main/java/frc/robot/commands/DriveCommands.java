@@ -31,11 +31,15 @@ import java.util.function.Supplier;
 
 public class DriveCommands {
   private static final double DEADBAND = 0.1;
-  private static final double MAX_ACCELERATION = 1.0;
+  //  private static final double MAX_JOYSTICK_ACCELERATION = 1.0;
   private static final double ANGLE_KP = 3.0;
   private static final double ANGLE_KD = 0.4;
   private static final double ANGLE_MAX_VELOCITY = 8.0;
   private static final double ANGLE_MAX_ACCELERATION = 20.0;
+  private static final double LINEAR_KP = 3.0;
+  private static final double LINEAR_KD = 0.2;
+  private static final double LINEAR_MAX_VELOCITY = 3.0;
+  private static final double LINEAR_MAX_ACCELERATION = 3.0;
   private static final double FF_START_DELAY = 2.0; // Secs
   private static final double FF_RAMP_RATE = 0.1; // Volts/Sec
   private static final double WHEEL_RADIUS_MAX_VELOCITY = 0.25; // Rad/Sec
@@ -65,15 +69,13 @@ public class DriveCommands {
       DoubleSupplier xSupplier,
       DoubleSupplier ySupplier,
       DoubleSupplier omegaSupplier) {
-    SlewRateLimiter xLimiter = new SlewRateLimiter(MAX_ACCELERATION);
-    SlewRateLimiter yLimiter = new SlewRateLimiter(MAX_ACCELERATION);
+    //    SlewRateLimiter xLimiter = new SlewRateLimiter(MAX_JOYSTICK_ACCELERATION);
+    //    SlewRateLimiter yLimiter = new SlewRateLimiter(MAX_JOYSTICK_ACCELERATION);
     return Commands.run(
         () -> {
           // Get linear velocity
           Translation2d linearVelocity =
-              getLinearVelocityFromJoysticks(
-                  xLimiter.calculate(xSupplier.getAsDouble()),
-                  yLimiter.calculate(ySupplier.getAsDouble()));
+              getLinearVelocityFromJoysticks(xSupplier.getAsDouble(), ySupplier.getAsDouble());
 
           // Apply rotation deadband
           double omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
@@ -178,6 +180,57 @@ public class DriveCommands {
             drive)
         // Reset PID controller when command starts
         .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+  }
+
+  public static Command singleAxisJoystickDrive(
+      Drive drive,
+      DoubleSupplier xSupplier,
+      DoubleSupplier yPositionSupplier,
+      Supplier<Rotation2d> rotationSupplier) {
+    ProfiledPIDController yController =
+        new ProfiledPIDController(
+            LINEAR_KP,
+            0.0,
+            LINEAR_KD,
+            new TrapezoidProfile.Constraints(LINEAR_MAX_VELOCITY, LINEAR_MAX_ACCELERATION));
+    ProfiledPIDController angleController =
+        new ProfiledPIDController(
+            ANGLE_KP,
+            0.0,
+            ANGLE_KD,
+            new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+    angleController.enableContinuousInput(-Math.PI, Math.PI);
+    return Commands.run(
+            () -> {
+              // Square x value for more precise control
+              double x = xSupplier.getAsDouble();
+              x = Math.copySign(x * x, x);
+
+              // Calculate y speed
+              double y =
+                  yController.calculate(drive.getPose().getY(), yPositionSupplier.getAsDouble());
+
+              // Calculate angular speed
+              double omega =
+                  angleController.calculate(
+                      drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+
+              // Convert to field relative speeds & send command
+              ChassisSpeeds speeds =
+                  new ChassisSpeeds(x * drive.getMaxLinearSpeedMetersPerSec(), y, omega);
+              boolean isFlipped = RobotUtil.isRedAlliance();
+              drive.runVelocity(
+                  ChassisSpeeds.fromFieldRelativeSpeeds(
+                      speeds,
+                      isFlipped ? drive.getRotation().plus(Rotation2d.kPi) : drive.getRotation()),
+                  true);
+            },
+            drive)
+        .beforeStarting(
+            () -> {
+              yController.reset(drive.getPose().getY());
+              angleController.reset(drive.getRotation().getRadians());
+            });
   }
 
   /**

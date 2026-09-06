@@ -7,8 +7,11 @@ package frc.robot;
 import static edu.wpi.first.units.Units.Meters;
 
 import com.ctre.phoenix6.CANBus;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.FieldUtils;
 
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
@@ -57,21 +60,28 @@ public final class Constants {
   public static final class CANConstants {
     // superstructure canbus
     public static final CANBus SUPERSTRUCTURE = new CANBus("Superstructure");
-    public static final int ELEVATOR_LEADER = 1;
-    public static final int ELEVATOR_FOLLOWER = 2;
+    public static final int ELEVATOR_LEFT = 1;
+    public static final int ELEVATOR_RIGHT = 2;
     public static final int OUTTAKE_LEFT = 3;
     public static final int OUTTAKE_RIGHT = 4;
     public static final int INDEXER = 5;
-    public static final int INTAKE_PIVOT = 6;
-    public static final int INTAKE_ROLLER = 7;
-    public static final int INTAKE_ENCODER = 8;
+    public static final int INTAKE_PIVOT_LEFT = 6;
+    public static final int INTAKE_PIVOT_RIGHT = 7;
+    public static final int INTAKE_ROLLER = 8;
+    public static final int INTAKE_ENCODER = 9;
     // rio canbus
     public static final int INDEXER_LASERCAN = 20;
     public static final int OUTTAKE_LASERCAN = 21;
   }
 
   public static final class FieldConstants {
-    public static final Distance FIELD_LENGTH = Meters.of(16.4592);
-    public static final Distance FIELD_WIDTH = Meters.of(8.2296);
+    public static final Distance FIELD_LENGTH = Meters.of(Units.feetToMeters(54));
+    public static final Distance FIELD_WIDTH = Meters.of(Units.feetToMeters(27));
+
+    public static final Pose2d BLUE_LEFT_PANTRY = new Pose2d(); // placeholder
+    public static final Pose2d BLUE_RIGHT_PANTRY = new Pose2d(); // placeholder
+    public static final Pose2d RED_LEFT_PANTRY = FieldUtils.allianceRelativeFlip(BLUE_LEFT_PANTRY);
+    public static final Pose2d RED_RIGHT_PANTRY =
+        FieldUtils.allianceRelativeFlip(BLUE_RIGHT_PANTRY);
   }
 }

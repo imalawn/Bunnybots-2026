@@ -26,6 +26,7 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.vision.*;
+import frc.robot.util.AutoAlign;
 import frc.robot.util.BetterAutoChooser;
 import frc.robot.util.PhoenixUtil;
 import frc.robot.util.RobotUtil;
@@ -214,6 +215,23 @@ public class RobotContainer {
     Command lockWheels = Commands.startEnd(drive::stopWithX, () -> {}, drive);
     // Reset gyro to 0°
     Command zeroGyro = Commands.runOnce(() -> drive.zeroGyro(true), drive).ignoringDisable(true);
+    // Auto align to pantry (angle only)
+    Command lockToAngle =
+        DriveCommands.joystickDriveAtAngle(
+            drive,
+            () -> -driverController.getLeftY(),
+            () -> -driverController.getLeftX(),
+            () -> AutoAlign.getTarget(drive.getPose()).getRotation(),
+            // no feedforward
+            () -> 0);
+    // Auto align to pantry (locked angle and y)
+    Command lockToPantry =
+        DriveCommands.singleAxisJoystickDrive(
+            drive,
+            () -> -driverController.getLeftY(),
+            () -> AutoAlign.getTarget(drive.getPose()).getY(),
+            // avoid recomputing nearest pantry
+            () -> AutoAlign.getLastTarget().getRotation());
 
     /* Elevator commands */
     DoubleSupplier elevatorJoystick =
@@ -283,10 +301,13 @@ public class RobotContainer {
       CommandGenericHID keyboard = new CommandGenericHID(3);
     }
 
+    driverController.x().whileTrue(lockWheels);
+    driverController.povLeft().onTrue(zeroGyro);
+    driverController.a().whileTrue(lockToAngle);
+    driverController.rightTrigger(0.7).whileTrue(lockToPantry);
+
     if (DriverStation.isTest()) {
       // single controller for testing
-      driverController.x().whileTrue(lockWheels);
-      driverController.povLeft().onTrue(zeroGyro);
 
     } else {
       /* driver controls */

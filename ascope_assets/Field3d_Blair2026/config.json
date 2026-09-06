@@ -7,11 +7,11 @@
       "axis": "x",
       "degrees": 90
     },
-	{
-	  "axis": "z",
-	  "degrees": 180
-	}
-  ],  
+    {
+      "axis": "z",
+      "degrees": 180
+    }
+  ],
   "widthInches": 651.303,
   "heightInches": 321.625,
   "defaultOrigin": "auto",
@@ -45,11 +45,11 @@
     {
       "name": "Carrot",
       "rotations": [
-	    {
-		  "axis": "x",
-		  "degrees": 90
-		}
-	  ],
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
       "position": [
         0,
         0,
@@ -64,14 +64,14 @@
         "Carrot_6"
       ]
     },
-	{
+    {
       "name": "CakedUpCarrot",
       "rotations": [
-		{
-		  "axis": "x",
-		  "degrees": 90
-		}
-	  ],
+        {
+          "axis": "x",
+          "degrees": 90
+        }
+      ],
       "position": [
         0,
         0,

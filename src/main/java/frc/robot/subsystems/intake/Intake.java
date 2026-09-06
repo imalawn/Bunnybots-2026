@@ -5,6 +5,7 @@ import static frc.robot.subsystems.intake.IntakeConstants.SETPOINTS;
 
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.PositionVoltage;
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
@@ -45,8 +46,9 @@ public class Intake extends ExtendedSubsystem {
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.INTAKE_PIVOT,
+                  Constants.CANConstants.INTAKE_PIVOT_LEFT,
                   IntakeConstants.PIVOT_CONFIG)
+              .addFollower(Constants.CANConstants.INTAKE_PIVOT_RIGHT, MotorAlignmentValue.Opposed)
               .addControlRequest(new MotionMagicVoltage(0).withOverrideBrakeDurNeutral(true))
               .addControlRequest(new PositionVoltage(0).withOverrideBrakeDurNeutral(true))
               .build();

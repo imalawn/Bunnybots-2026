@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.Radians;
 import static edu.wpi.first.units.Units.Rotations;
 import static frc.robot.subsystems.elevator.ElevatorConstants.SETPOINTS;
 
+import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
@@ -46,8 +47,9 @@ public class Elevator extends ExtendedSubsystem {
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.ELEVATOR_FOLLOWER,
+                  Constants.CANConstants.ELEVATOR_LEFT,
                   ElevatorConstants.MOTOR_CONFIG)
+              .addFollower(Constants.CANConstants.ELEVATOR_RIGHT, MotorAlignmentValue.Aligned)
               .build();
           case SIM -> new LinearSystemIOSim(
               DCMotor.getKrakenX60(1),
