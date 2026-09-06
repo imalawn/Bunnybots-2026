@@ -309,45 +309,40 @@ public class RobotContainer {
     driverController.rightTrigger(0.7).whileTrue(lockToPantry);
 
     /* operator controls */
-    if (DriverStation.isTest()) {
-      // single controller for testing
+    // main profile
+    operatorController.povDown().onTrue(stowElevator);
+    operatorController.povRight().onTrue(ovenElevator);
+    operatorController.povLeft().onTrue(l1Elevator);
+    operatorController.povUp().onTrue(l2Elevator);
+    operatorController.start().onTrue(elevatorHoming);
 
-    } else {
-      // main profile
-      operatorController.povDown().onTrue(stowElevator);
-      operatorController.povRight().onTrue(ovenElevator);
-      operatorController.povLeft().onTrue(l1Elevator);
-      operatorController.povUp().onTrue(l2Elevator);
-      operatorController.start().onTrue(elevatorHoming);
+    operatorController.b().whileTrue(ejectGamePiece);
+    operatorController.leftBumper().whileTrue(sterilizeGamePiece);
+    operatorController.y().whileTrue(reverseOuttake);
 
-      operatorController.b().whileTrue(ejectGamePiece);
-      operatorController.leftBumper().whileTrue(sterilizeGamePiece);
-      operatorController.y().whileTrue(reverseOuttake);
+    operatorController.rightTrigger(0.7).whileTrue(indexerToOuttake);
+    operatorController.leftTrigger(0.7).whileTrue(reverseIndexer);
 
-      operatorController.rightTrigger(0.7).whileTrue(indexerToOuttake);
-      operatorController.leftTrigger(0.7).whileTrue(reverseIndexer);
+    operatorController.a().whileTrue(intakeFromGround);
+    operatorController.rightBumper().whileTrue(intakeToIndexer);
+    operatorController.x().whileTrue(reverseIntake);
+    operatorController.back().onTrue(stowIntake);
 
-      operatorController.a().whileTrue(intakeFromGround);
-      operatorController.rightBumper().whileTrue(intakeToIndexer);
-      operatorController.x().whileTrue(reverseIntake);
-      operatorController.back().onTrue(stowIntake);
+    // test mode (single controller)
 
-      // test mode (single controller)
-
-    }
   }
 
   private void configureAutoCommands() {}
 
   public void setControlScheme(ControlScheme newScheme) {
     switch (newScheme) {
-      case MAIN, TEST -> {
+      case GUITAR_HERO_OP -> configureGuitarHeroController(false);
+      case GUITAR_HERO_FULL -> configureGuitarHeroController(true);
+      default -> {
         if (controlScheme == ControlScheme.GUITAR_HERO_FULL) {
           useDefaultDrive();
         }
       }
-      case GUITAR_HERO_OP -> configureGuitarHeroController(false);
-      case GUITAR_HERO_FULL -> configureGuitarHeroController(true);
     }
     controlScheme = newScheme;
   }
@@ -359,10 +354,98 @@ public class RobotContainer {
           new GuitarHeroController(ControllerConstants.GUITAR_HERO_CONTROLLER_PORT);
 
       // configure triggers only once
+      /* Elevator commands */
+      DoubleSupplier elevatorJoystick =
+          () ->
+              Math.copySign(
+                  MathUtil.applyDeadband(
+                      guitarHeroController.getWhammyBarAxis(),
+                      ControllerConstants.GUITAR_HERO_DEADBAND),
+                  // may need to add - to invert
+                  guitarHeroController.getStrumBarAxis());
+      Command manualElevator = elevator.manualControl(elevatorJoystick);
+      Command elevatorHoming = elevator.homingSequence();
+      Command stowElevator = elevator.stow();
+      Command ovenElevator = elevator.oven();
+      Command l1Elevator = elevator.l1();
+      Command l2Elevator = elevator.l2();
+      /* Outtake commands */
+      Command ejectGamePiece = outtake.eject();
+      Command sterilizeGamePiece = outtake.sterilize();
+      Command reverseOuttake = outtake.reverse();
+      /* Indexer commands */
+      // manual override of trigger
+      Command indexerToOuttake =
+          Commands.waitUntil(
+                  () ->
+                      elevator.getSetpoint() == Elevator.Setpoint.STOWED
+                          && elevator.hasReachedSetpoint())
+              .andThen(indexer.feed());
+      Command reverseIndexer = indexer.reverse();
+      /* Intake commands */
+      // fully manual
+      Command intakeToIndexer = intake.handoff();
+      Command intakeFromGround = intake.intakeFromGround();
+      Command stowIntake = intake.stow();
+      Command reverseIntake = intake.reverse();
 
       // controls are only active during the correct mode
       BooleanSupplier guitarHeroControls = () -> controlScheme.isGuitarHero;
-      BooleanSupplier guitarHeroDrive = () -> controlScheme == ControlScheme.GUITAR_HERO_FULL;
+      // up and down may need swapping
+      BooleanSupplier upStrumBar = () -> guitarHeroController.getStrumBarAxis() > 0.5;
+      BooleanSupplier downStrumBar = () -> guitarHeroController.getStrumBarAxis() < 0.5;
+      BooleanSupplier neutralStrumBar =
+          () -> !upStrumBar.getAsBoolean() && !downStrumBar.getAsBoolean();
+
+      new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0)
+          .and(guitarHeroControls)
+          .whileTrue(manualElevator);
+
+      guitarHeroController
+          .green()
+          .and(guitarHeroControls)
+          .and(neutralStrumBar)
+          .onTrue(stowElevator);
+      guitarHeroController.red().and(guitarHeroControls).and(neutralStrumBar).onTrue(ovenElevator);
+      guitarHeroController.yellow().and(guitarHeroControls).and(neutralStrumBar).onTrue(l1Elevator);
+      guitarHeroController.blue().and(guitarHeroControls).and(neutralStrumBar).onTrue(l2Elevator);
+      guitarHeroController.green().and(guitarHeroControls).and(upStrumBar).onTrue(elevatorHoming);
+
+      guitarHeroController
+          .red()
+          .and(guitarHeroControls)
+          .and(downStrumBar)
+          .whileTrue(ejectGamePiece);
+      guitarHeroController
+          .orange()
+          .and(guitarHeroControls)
+          .and(downStrumBar)
+          .whileTrue(sterilizeGamePiece);
+      guitarHeroController.red().and(guitarHeroControls).and(upStrumBar).whileTrue(reverseOuttake);
+
+      guitarHeroController
+          .blue()
+          .and(guitarHeroControls)
+          .and(downStrumBar)
+          .whileTrue(indexerToOuttake);
+      guitarHeroController
+          .yellow()
+          .and(guitarHeroControls)
+          .and(upStrumBar)
+          .whileTrue(reverseIndexer);
+
+      guitarHeroController
+          .green()
+          .and(guitarHeroControls)
+          .and(downStrumBar)
+          .whileTrue(intakeFromGround);
+      guitarHeroController
+          .yellow()
+          .and(guitarHeroControls)
+          .and(downStrumBar)
+          .whileTrue(intakeToIndexer);
+      guitarHeroController.blue().and(guitarHeroControls).and(upStrumBar).whileTrue(reverseIntake);
+      guitarHeroController.orange().and(guitarHeroControls).and(upStrumBar).whileTrue(stowIntake);
     }
 
     if (fullControl) {

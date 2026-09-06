@@ -55,6 +55,7 @@ public final class Constants {
     public static final int GUITAR_HERO_CONTROLLER_PORT = 2;
     public static final double DRIVER_DEADBAND = 0.1;
     public static final double OPERATOR_DEADBAND = 0.1;
+    public static final double GUITAR_HERO_DEADBAND = 0.1;
   }
 
   public static final class CANConstants {
