@@ -227,11 +227,13 @@ public class RobotContainer {
     // Auto align to pantry (locked angle and y)
     Command lockToPantry =
         DriveCommands.singleAxisJoystickDrive(
-            drive,
-            () -> -driverController.getLeftY(),
-            () -> AutoAlign.getTarget(drive.getPose()).getY(),
-            // avoid recomputing nearest pantry
-            () -> AutoAlign.getLastTarget().getRotation());
+                drive,
+                () -> -driverController.getLeftY(),
+                () -> AutoAlign.getTarget(drive.getPose()).getY(),
+                // avoid recomputing nearest pantry
+                () -> AutoAlign.getLastTarget().getRotation())
+            .beforeStarting(() -> drive.setSpeedLimiter(true))
+            .finallyDo(() -> drive.setSpeedLimiter(false));
 
     /* Elevator commands */
     DoubleSupplier elevatorJoystick =
@@ -306,15 +308,11 @@ public class RobotContainer {
     driverController.a().whileTrue(lockToAngle);
     driverController.rightTrigger(0.7).whileTrue(lockToPantry);
 
+    /* operator controls */
     if (DriverStation.isTest()) {
       // single controller for testing
 
     } else {
-      /* driver controls */
-      driverController.x().whileTrue(lockWheels);
-      driverController.povLeft().onTrue(zeroGyro);
-
-      /* operator controls */
       // main profile
       // BooleanSupplier mainProfile = () -> controlScheme == ControlScheme.MAIN;
       operatorController.povDown().onTrue(stowElevator);
@@ -339,6 +337,8 @@ public class RobotContainer {
 
     }
   }
+
+  private void configureAutoCommands() {}
 
   public void setControlScheme(ControlScheme newScheme) {
     switch (newScheme) {
@@ -372,8 +372,6 @@ public class RobotContainer {
       useDefaultDrive();
     }
   }
-
-  private void configureAutoCommands() {}
 
   private void useDefaultDrive() {
     if (defaultDriveCommand == null) {
