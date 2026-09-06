@@ -227,28 +227,33 @@ public class RobotContainer {
     Command l1Elevator = elevator.l1();
     Command l2Elevator = elevator.l2();
 
-    /* Other superstructure commands */
-    // whileTrue, manual override of trigger
-    Command feedToOuttake =
+    /* Outtake commands */
+    Command ejectGamePiece = outtake.eject();
+    Command sterilizeGamePiece = outtake.sterilize();
+    Command reverseOuttake = outtake.reverse();
+
+    /* Indexer commands */
+    // manual override of trigger
+    Command indexerToOuttake =
         Commands.waitUntil(
                 () ->
                     elevator.getSetpoint() == Elevator.Setpoint.STOWED
                         && elevator.hasReachedSetpoint())
             .andThen(indexer.feed());
-    Command ejectGamePiece = outtake.eject();
     Command reverseIndexer = indexer.reverse();
-    Command reverseOuttake = outtake.reverse();
-    // whileTrue, fully manual
-    RobotUtil.RumbleRequest handoffFinished = new RobotUtil.RumbleRequest(0.8, 0, 5);
-    Command feedToHopper =
+
+    /* Intake commands */
+    // fully manual
+    RobotUtil.RumbleRequest handoffFinished = new RobotUtil.RumbleRequest(0, 0.8, 5);
+    Command intakeToIndexer =
         intake
             .handoff()
             .alongWith(
                 Commands.waitUntil(indexer::hasGamePiece)
                     .andThen(() -> RobotUtil.requestOperatorRumble(handoffFinished)));
-    Command hopperFeedBackup = intake.handOffBackup();
     Command intakeFromGround = intake.intakeFromGround();
     Command stowIntake = intake.stow();
+    Command reverseIntake = intake.reverse();
 
     // Default command, normal field-relative drive
     useDefaultDrive();
@@ -289,10 +294,27 @@ public class RobotContainer {
       driverController.povLeft().onTrue(zeroGyro);
 
       /* operator controls */
+      // main profile
+      // BooleanSupplier mainProfile = () -> controlScheme == ControlScheme.MAIN;
+      operatorController.povDown().onTrue(stowElevator);
+      operatorController.povRight().onTrue(ovenElevator);
+      operatorController.povLeft().onTrue(l1Elevator);
+      operatorController.povUp().onTrue(l2Elevator);
+      operatorController.start().onTrue(elevatorHoming);
+
+      operatorController.b().whileTrue(ejectGamePiece);
+      operatorController.leftBumper().whileTrue(sterilizeGamePiece);
+      operatorController.y().whileTrue(reverseOuttake);
+
+      operatorController.rightTrigger(0.7).whileTrue(indexerToOuttake);
+      operatorController.leftTrigger(0.7).whileTrue(reverseIndexer);
+
+      operatorController.a().whileTrue(intakeFromGround);
+      operatorController.rightBumper().whileTrue(intakeToIndexer);
+      operatorController.x().whileTrue(reverseIntake);
+      operatorController.back().onTrue(stowIntake);
 
       // test mode (single controller)
-
-      // main profile
 
     }
   }

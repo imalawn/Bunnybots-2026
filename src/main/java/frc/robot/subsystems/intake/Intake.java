@@ -159,6 +159,10 @@ public class Intake extends ExtendedSubsystem {
     return runOnce(this::reset);
   }
 
+  public Command reverse() {
+    return startEnd(() -> roller.runVelocity(IntakeConstants.ROLLER_RPS_REVERSED), roller::stop);
+  }
+
   public double getPivotPosition() {
     return pivot.getPositionDeg();
   }
