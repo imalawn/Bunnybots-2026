@@ -314,7 +314,6 @@ public class RobotContainer {
 
     } else {
       // main profile
-      // BooleanSupplier mainProfile = () -> controlScheme == ControlScheme.MAIN;
       operatorController.povDown().onTrue(stowElevator);
       operatorController.povRight().onTrue(ovenElevator);
       operatorController.povLeft().onTrue(l1Elevator);
