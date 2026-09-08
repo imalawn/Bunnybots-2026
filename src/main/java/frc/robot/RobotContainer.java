@@ -26,15 +26,14 @@ import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.vision.*;
-import frc.robot.util.AutoAlign;
-import frc.robot.util.BetterAutoChooser;
-import frc.robot.util.PhoenixUtil;
-import frc.robot.util.RobotUtil;
+import frc.robot.util.*;
 import frc.robot.util.io.GuitarHeroController;
+import frc.robot.util.sim.SimulationHelper;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -69,7 +68,7 @@ public class RobotContainer {
 
   // Simulated things
   private final SwerveDriveSimulation driveSimulation;
-  //  private SuperstructureSim superstructureSim;
+  private final SimulationHelper sim;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -83,7 +82,7 @@ public class RobotContainer {
                 new ModuleIOTalonFXReal(TunerConstants.FrontRight, false),
                 new ModuleIOTalonFXReal(TunerConstants.BackLeft, false),
                 new ModuleIOTalonFXReal(TunerConstants.BackRight, false),
-                (pose) -> {});
+                pose -> {});
         vision =
             new Vision(
                 drive,
@@ -97,8 +96,13 @@ public class RobotContainer {
         outtake = new Outtake();
         indexer = new Indexer();
         intake = new Intake();
+        sim = null;
       }
       case SIM -> {
+        Arena2025Reefscape arena = new Arena2025Reefscape();
+        SimulatedArena.overrideInstance(arena);
+        SimulatedArena.getInstance().resetFieldForAuto();
+        SimulatedArena.getInstance().clearGamePieces();
         driveSimulation =
             new SwerveDriveSimulation(
                 Drive.getMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
@@ -130,6 +134,9 @@ public class RobotContainer {
         outtake = new Outtake();
         indexer = new Indexer();
         intake = new Intake();
+        sim =
+            SimulationHelper.createInstance(
+                elevator, intake, outtake, driveSimulation, drive::getChassisSpeeds);
       }
       default -> {
         /* REPLAY */
@@ -149,6 +156,9 @@ public class RobotContainer {
         outtake = new Outtake();
         indexer = new Indexer();
         intake = new Intake();
+        sim =
+            SimulationHelper.createInstance(
+                elevator, intake, outtake, driveSimulation, drive::getChassisSpeeds);
       }
     }
 
@@ -161,7 +171,7 @@ public class RobotContainer {
         new LoggedDashboardChooser<>("Control Profile");
     controlProfiles.addDefaultOption("Main", ControlScheme.MAIN);
     controlProfiles.addOption("Guitar Hero Operator", ControlScheme.GUITAR_HERO_OP);
-    controlProfiles.addOption("Guitar Hero Full Control", ControlScheme.GUITAR_HERO_FULL);
+    //    controlProfiles.addOption("Guitar Hero Full Control", ControlScheme.GUITAR_HERO_FULL);
     controlProfiles.addOption("Testing", ControlScheme.TEST);
     controlProfiles.onChange(this::setControlScheme);
 
@@ -492,7 +502,17 @@ public class RobotContainer {
     return autoChooser.get();
   }
 
-  public void resetSimulationField() {}
+  public void resetSimulationField() {
+    if (Constants.currentMode == Constants.Mode.REAL) return;
 
-  public void updateSimulation() {}
+    driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
+    SimulatedArena.getInstance().resetFieldForAuto();
+    SimulatedArena.getInstance().clearGamePieces();
+  }
+
+  public void updateSimulation() {
+    if (Constants.currentMode == Constants.Mode.REAL) return;
+
+    sim.simulationPeriodic();
+  }
 }

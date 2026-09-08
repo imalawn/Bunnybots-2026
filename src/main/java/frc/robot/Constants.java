@@ -84,5 +84,16 @@ public final class Constants {
     public static final Pose2d RED_LEFT_PANTRY = FieldUtils.allianceRelativeFlip(BLUE_LEFT_PANTRY);
     public static final Pose2d RED_RIGHT_PANTRY =
         FieldUtils.allianceRelativeFlip(BLUE_RIGHT_PANTRY);
+
+    public static final Pose2d BLUE_RAMP = new Pose2d();
+    public static final Pose2d RED_RAMP = FieldUtils.allianceRelativeFlip(BLUE_RAMP);
+
+    public static final Pose2d BLUE_REAR_DEPOT = new Pose2d();
+    public static final Pose2d BLUE_SIDE_DEPOT = new Pose2d();
+    public static final Pose2d RED_REAR_DEPOT = FieldUtils.allianceRelativeFlip(BLUE_REAR_DEPOT);
+    public static final Pose2d RED_SIDE_DEPOT = FieldUtils.allianceRelativeFlip(BLUE_SIDE_DEPOT);
+
+    public static final Pose2d BLUE_TABLE_ZONE = new Pose2d();
+    public static final Pose2d RED_TABLE_ZONE = new Pose2d();
   }
 }

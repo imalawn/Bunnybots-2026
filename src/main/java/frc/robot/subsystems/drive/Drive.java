@@ -178,7 +178,7 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
         this::getPose,
         this::setPose,
         this::getChassisSpeeds,
-        (speeds) -> runVelocity(speeds, true),
+        speeds -> runVelocity(speeds, true),
         new PPHolonomicDriveController(
             new PIDConstants(5.0, 0.0, 0.0), new PIDConstants(5.0, 0.0, 0.0)),
         PP_CONFIG,
