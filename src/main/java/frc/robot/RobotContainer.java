@@ -162,8 +162,6 @@ public class RobotContainer {
       }
     }
 
-    PhoenixUtil.startTelemetry();
-
     // Configure the trigger bindings
     configureBindings();
 

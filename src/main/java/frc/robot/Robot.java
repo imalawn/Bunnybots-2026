@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.util.CANivoreReader;
 import frc.robot.util.Elastic;
+import frc.robot.util.PhoenixUtil;
 import frc.robot.util.subsystems.RobotStateHandler;
 import org.littletonrobotics.junction.*;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
@@ -92,6 +93,10 @@ public class Robot extends LoggedRobot {
    */
   @Override
   public void robotPeriodic() {
+    // Refresh all status signals. This should happen before the Scheduler runs because commands and
+    // periodic methods may rely on this data being up-to-date.
+    PhoenixUtil.refreshAll();
+
     // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
     // commands, running already-scheduled commands, removing finished or interrupted commands,
     // and running subsystem periodic() methods.  This must be called from the robot's periodic

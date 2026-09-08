@@ -30,7 +30,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Timer;
 import java.util.function.Supplier;
@@ -52,9 +51,6 @@ public final class PhoenixUtil {
 
   private static BaseStatusSignal[] superstructureSignals = new BaseStatusSignal[0];
 
-  /** Notifier loop for signal refresh */
-  private static final Notifier signalThread = new Notifier(PhoenixUtil::waitForAll);
-
   /** Registers a set of signals for synchronized refresh. */
   public static void registerSignals(CANBus canbus, BaseStatusSignal... signals) {
     if (canbus.getName().equals("Drivebase")) {
@@ -73,18 +69,13 @@ public final class PhoenixUtil {
   }
 
   /** Refresh all registered signals. */
-  public static void waitForAll() {
+  public static void refreshAll() {
     if (drivebaseSignals.length > 0) {
-      BaseStatusSignal.waitForAll(0.02, drivebaseSignals);
+      BaseStatusSignal.refreshAll(drivebaseSignals);
     }
     if (superstructureSignals.length > 0) {
-      BaseStatusSignal.waitForAll(0.02, superstructureSignals);
+      BaseStatusSignal.refreshAll(superstructureSignals);
     }
-  }
-
-  /** Start a thread for refreshing signals */
-  public static void startTelemetry() {
-    signalThread.startPeriodic(0.02);
   }
 
   public static class TalonFXMotorControllerSim implements SimulatedMotorController {
