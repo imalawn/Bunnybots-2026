@@ -28,12 +28,13 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.*;
 import frc.robot.util.io.GuitarHeroController;
+import frc.robot.util.sim.Arena2026Bunnybots;
 import frc.robot.util.sim.SimulationHelper;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.Arena2025Reefscape;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
@@ -99,7 +100,7 @@ public class RobotContainer {
         sim = null;
       }
       case SIM -> {
-        Arena2025Reefscape arena = new Arena2025Reefscape();
+        Arena2026Bunnybots arena = new Arena2026Bunnybots();
         SimulatedArena.overrideInstance(arena);
         SimulatedArena.getInstance().resetFieldForAuto();
         SimulatedArena.getInstance().clearGamePieces();
@@ -148,7 +149,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {},
-                (pose) -> {});
+                pose -> {});
         vision =
             new Vision(
                 drive, new VisionIO() {}, new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
@@ -203,6 +204,10 @@ public class RobotContainer {
     // intake));
 
     DriverStation.silenceJoystickConnectionWarning(true);
+
+    Logger.recordOutput("Field/BlueOven", Constants.FieldConstants.BLUE_OVEN);
+    Logger.recordOutput("Field/RedOven", Constants.FieldConstants.RED_OVEN);
+    Logger.recordOutput("Field/BluePantry", Constants.FieldConstants.BLUE_PANTRY);
   }
 
   /**
@@ -229,7 +234,7 @@ public class RobotContainer {
             drive,
             () -> -driverController.getLeftY(),
             () -> -driverController.getLeftX(),
-            () -> AutoAlign.getTarget(drive.getPose()).getRotation(),
+            () -> AutoAlign.getTargetPose().getRotation(),
             // no feedforward
             () -> 0);
     // Auto align to pantry (locked angle and y)
@@ -237,7 +242,7 @@ public class RobotContainer {
         DriveCommands.singleAxisJoystickDrive(
                 drive,
                 () -> -driverController.getLeftY(),
-                () -> AutoAlign.getTarget(drive.getPose()).getY(),
+                () -> AutoAlign.getTargetPose().getY(),
                 // avoid recomputing nearest pantry
                 () -> AutoAlign.getLastTarget().getRotation())
             .beforeStarting(() -> drive.setSpeedLimiter(true))

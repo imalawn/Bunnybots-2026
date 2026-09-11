@@ -13,8 +13,6 @@ import lombok.Getter;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly;
-import org.ironmaple.simulation.seasonspecific.reefscape2025.ReefscapeCoralOnFly.CoralStationsSide;
 import org.littletonrobotics.junction.Logger;
 
 public class SimulationHelper {
@@ -90,10 +88,10 @@ public class SimulationHelper {
     }
   }
 
-  public void loadFuel(CoralStationsSide side) {
-    ReefscapeCoralOnFly coralOnFly =
-        ReefscapeCoralOnFly.DropFromCoralStation(
-            side, DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue), true);
+  public void loadFuel(HarvestHavocCarrotOnFly.CarrotStations side) {
+    HarvestHavocCarrotOnFly coralOnFly =
+        HarvestHavocCarrotOnFly.dropFromCarrotStation(
+            side, DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue));
     SimulatedArena.getInstance().addGamePieceProjectile(coralOnFly);
   }
 }
