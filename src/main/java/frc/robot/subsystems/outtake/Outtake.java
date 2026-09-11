@@ -13,14 +13,16 @@ import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.motors.roller.RollerIOSim;
-import frc.robot.util.io.sensors.LaserCAN;
 import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
+import frc.robot.util.io.sensors.LaserCanIO;
+import frc.robot.util.io.sensors.LaserCanIOReal;
+import frc.robot.util.sim.SimulationHelper;
 import org.littletonrobotics.junction.Logger;
 
 public class Outtake extends SubsystemBase {
   private final Roller leftRoller;
   private final Roller rightRoller;
-  private final LaserCAN beambreak;
+  private final LaserCanIO beambreak;
   private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
 
   public Outtake() {
@@ -59,8 +61,14 @@ public class Outtake extends SubsystemBase {
     leftRoller = new Roller("Outtake/Left", leftIO);
     rightRoller = new Roller("Outtake/Right", rightIO);
 
-    // id is the same but on different bus
-    beambreak = new LaserCAN(Constants.CANConstants.OUTTAKE_LASERCAN);
+    beambreak =
+        switch (Constants.currentMode) {
+          case REAL -> new LaserCanIOReal(Constants.CANConstants.OUTTAKE_LASERCAN);
+          case SIM -> LaserCanIO.beambreakSim(
+              () -> SimulationHelper.getInstance().isOuttakeLoaded(),
+              OuttakeConstants.BEAMBREAK_THRESHOLD);
+          case REPLAY -> inputs -> {};
+        };
   }
 
   @Override
@@ -96,6 +104,10 @@ public class Outtake extends SubsystemBase {
 
   public Command reverse() {
     return startEnd(() -> runTogether(OuttakeConstants.REVERSED_RPS), this::stop);
+  }
+
+  public double getVelocityRPS() {
+    return leftRoller.getVelocityRPS();
   }
 
   public boolean hasGamePiece() {

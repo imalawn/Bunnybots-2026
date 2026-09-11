@@ -137,11 +137,14 @@ public class RobotContainer {
         intake = new Intake();
         sim =
             SimulationHelper.createInstance(
-                elevator, intake, outtake, driveSimulation, drive::getChassisSpeeds);
+                elevator, intake, indexer, outtake, driveSimulation, drive::getChassisSpeeds);
       }
       default -> {
         /* REPLAY */
-        driveSimulation = null;
+        driveSimulation =
+            new SwerveDriveSimulation(
+                Drive.getMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
+        ;
         drive =
             new Drive(
                 new GyroIO() {},
@@ -159,7 +162,7 @@ public class RobotContainer {
         intake = new Intake();
         sim =
             SimulationHelper.createInstance(
-                elevator, intake, outtake, driveSimulation, drive::getChassisSpeeds);
+                elevator, intake, indexer, outtake, driveSimulation, drive::getChassisSpeeds);
       }
     }
 

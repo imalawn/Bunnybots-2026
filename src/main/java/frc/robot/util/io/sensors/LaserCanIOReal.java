@@ -3,19 +3,11 @@ package frc.robot.util.io.sensors;
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
 import au.grapplerobotics.interfaces.LaserCanInterface;
-import org.littletonrobotics.junction.AutoLog;
 
-public class LaserCAN {
-  @AutoLog
-  public static class LaserCANInputs {
-    public boolean connected;
-    public boolean measurementValid;
-    public double distanceMillimeters;
-  }
-
+public class LaserCanIOReal implements LaserCanIO {
   private final LaserCan sensor;
 
-  public LaserCAN(
+  public LaserCanIOReal(
       int id,
       LaserCanInterface.RangingMode rangingMode,
       LaserCanInterface.TimingBudget timingBudget,
@@ -30,7 +22,7 @@ public class LaserCAN {
     }
   }
 
-  public LaserCAN(int id) {
+  public LaserCanIOReal(int id) {
     this(
         id,
         LaserCanInterface.RangingMode.SHORT,
@@ -38,11 +30,13 @@ public class LaserCAN {
         new LaserCanInterface.RegionOfInterest(8, 8, 16, 16));
   }
 
-  public void updateInputs(LaserCANInputs inputs) {
-    LaserCan.Measurement measurement = sensor.getMeasurement();
+  @Override
+  public void updateInputs(LaserCanInputs inputs) {
+    LaserCanInterface.Measurement measurement = sensor.getMeasurement();
     if (measurement != null) {
       inputs.connected = true;
-      inputs.measurementValid = measurement.status == LaserCan.LASERCAN_STATUS_VALID_MEASUREMENT;
+      inputs.measurementValid =
+          measurement.status == LaserCanInterface.LASERCAN_STATUS_VALID_MEASUREMENT;
       inputs.distanceMillimeters = measurement.distance_mm;
     } else {
       inputs.connected = false;

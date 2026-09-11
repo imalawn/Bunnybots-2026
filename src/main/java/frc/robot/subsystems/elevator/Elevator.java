@@ -19,6 +19,7 @@ import frc.robot.util.io.motors.elevator.LinearSystemIOSim;
 import frc.robot.util.subsystems.ExtendedSubsystem;
 import java.util.function.DoubleSupplier;
 import lombok.Getter;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends ExtendedSubsystem {
@@ -158,6 +159,11 @@ public class Elevator extends ExtendedSubsystem {
 
   public double getPositionRad() {
     return elevator.getPositionRad();
+  }
+
+  @AutoLogOutput(key = "Elevator/HeightMeters")
+  public double getPositionMeters() {
+    return elevator.getPositionRad() * ElevatorConstants.DRUM_RADIUS;
   }
 
   public boolean hasReachedSetpoint() {

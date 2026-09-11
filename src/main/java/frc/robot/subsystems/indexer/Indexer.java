@@ -13,13 +13,15 @@ import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.motors.roller.RollerIOSim;
-import frc.robot.util.io.sensors.LaserCAN;
 import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
+import frc.robot.util.io.sensors.LaserCanIO;
+import frc.robot.util.io.sensors.LaserCanIOReal;
+import frc.robot.util.sim.SimulationHelper;
 import org.littletonrobotics.junction.Logger;
 
 public class Indexer extends SubsystemBase {
   private final Roller roller;
-  private final LaserCAN beambreak;
+  private final LaserCanIO beambreak;
   private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
 
   public Indexer() {
@@ -41,8 +43,14 @@ public class Indexer extends SubsystemBase {
         };
     roller = new Roller("Indexer", io);
 
-    // id is the same but on different bus
-    beambreak = new LaserCAN(Constants.CANConstants.INDEXER_LASERCAN);
+    beambreak =
+        switch (Constants.currentMode) {
+          case REAL -> new LaserCanIOReal(Constants.CANConstants.INDEXER_LASERCAN);
+          case SIM -> LaserCanIO.beambreakSim(
+              () -> SimulationHelper.getInstance().getNumCarrotsInHopper() > 0,
+              IndexerConstants.BEAMBREAK_THRESHOLD);
+          case REPLAY -> inputs -> {};
+        };
   }
 
   @Override
@@ -58,6 +66,10 @@ public class Indexer extends SubsystemBase {
 
   public Command reverse() {
     return startEnd(() -> roller.runVelocity(IndexerConstants.REVERSED_RPS), roller::stop);
+  }
+
+  public double getVelocityRPS() {
+    return roller.getVelocityRPS();
   }
 
   public boolean hasGamePiece() {
