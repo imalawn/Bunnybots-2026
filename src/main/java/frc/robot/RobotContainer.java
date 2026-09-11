@@ -103,7 +103,6 @@ public class RobotContainer {
         Arena2026Bunnybots arena = new Arena2026Bunnybots();
         SimulatedArena.overrideInstance(arena);
         SimulatedArena.getInstance().resetFieldForAuto();
-        SimulatedArena.getInstance().clearGamePieces();
         driveSimulation =
             new SwerveDriveSimulation(
                 Drive.getMapleSimConfig(), new Pose2d(3, 3, new Rotation2d()));
@@ -513,7 +512,6 @@ public class RobotContainer {
 
     driveSimulation.setSimulationWorldPose(new Pose2d(3, 3, new Rotation2d()));
     SimulatedArena.getInstance().resetFieldForAuto();
-    SimulatedArena.getInstance().clearGamePieces();
   }
 
   public void updateSimulation() {
