@@ -13,8 +13,8 @@ import frc.robot.util.io.motors.MotorIOTalonFX;
 import frc.robot.util.io.motors.roller.Roller;
 import frc.robot.util.io.motors.roller.RollerIO;
 import frc.robot.util.io.motors.roller.RollerIOSim;
-import frc.robot.util.io.sensors.LaserCANInputsAutoLogged;
 import frc.robot.util.io.sensors.LaserCanIO;
+import frc.robot.util.io.sensors.LaserCanIOInputsAutoLogged;
 import frc.robot.util.io.sensors.LaserCanIOReal;
 import frc.robot.util.sim.SimulationHelper;
 import org.littletonrobotics.junction.Logger;
@@ -23,7 +23,7 @@ public class Outtake extends SubsystemBase {
   private final Roller leftRoller;
   private final Roller rightRoller;
   private final LaserCanIO beambreak;
-  private final LaserCANInputsAutoLogged beambreakInputs = new LaserCANInputsAutoLogged();
+  private final LaserCanIOInputsAutoLogged beambreakInputs = new LaserCanIOInputsAutoLogged();
 
   public Outtake() {
     RollerIO leftIO =

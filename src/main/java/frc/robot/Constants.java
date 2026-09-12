@@ -95,7 +95,8 @@ public final class Constants {
 
     public static final Pose2d BLUE_RAMP =
         new Pose2d(new Translation2d(6.013, 1.739).plus(ORIGIN), Rotation2d.kCCW_90deg);
-    public static final Pose2d RED_RAMP = FieldUtils.allianceRelativeFlip(BLUE_RAMP);
+    public static final Pose2d RED_RAMP =
+        new Pose2d(new Translation2d(-6.013, 1.739).plus(ORIGIN), Rotation2d.kCCW_90deg);
 
     public static final Pose2d BLUE_REAR_DEPOT = new Pose2d();
     public static final Pose2d BLUE_SIDE_DEPOT = new Pose2d();

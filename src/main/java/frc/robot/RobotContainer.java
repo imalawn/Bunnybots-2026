@@ -29,6 +29,7 @@ import frc.robot.subsystems.vision.*;
 import frc.robot.util.*;
 import frc.robot.util.io.GuitarHeroController;
 import frc.robot.util.sim.Arena2026Bunnybots;
+import frc.robot.util.sim.HarvestHavocCarrotOnFly;
 import frc.robot.util.sim.SimulationHelper;
 import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
@@ -278,7 +279,7 @@ public class RobotContainer {
     Command reverseIndexer = indexer.reverse();
 
     /* Intake commands */
-    // fully manual
+    // handoff fully manual
     RobotUtil.RumbleRequest handoffFinished = new RobotUtil.RumbleRequest(0, 0.8, 5);
     Command intakeToIndexer =
         intake
@@ -316,6 +317,41 @@ public class RobotContainer {
 
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);
+
+      keyboard.button(1).onTrue(l1Elevator);
+      keyboard.button(2).onTrue(l2Elevator);
+      keyboard.button(3).onTrue(ovenElevator);
+      keyboard.button(4).onTrue(stowElevator);
+      keyboard.button(5).whileTrue(intakeFromGround);
+      keyboard.button(6).whileTrue(ejectGamePiece);
+      // drop carrots
+      keyboard
+          .button(7)
+          .onTrue(
+              Commands.runOnce(
+                  () ->
+                      sim.dropCarrot(
+                          RobotUtil.isRedAlliance()
+                              ? HarvestHavocCarrotOnFly.CarrotStations.RED_RAMP
+                              : HarvestHavocCarrotOnFly.CarrotStations.BLUE_RAMP)));
+      keyboard
+          .button(8)
+          .onTrue(
+              Commands.runOnce(
+                  () ->
+                      sim.dropCarrot(
+                          RobotUtil.isRedAlliance()
+                              ? HarvestHavocCarrotOnFly.CarrotStations.RED_REAR_DEPOT
+                              : HarvestHavocCarrotOnFly.CarrotStations.BLUE_REAR_DEPOT)));
+      keyboard
+          .button(7)
+          .onTrue(
+              Commands.runOnce(
+                  () ->
+                      sim.dropCarrot(
+                          RobotUtil.isRedAlliance()
+                              ? HarvestHavocCarrotOnFly.CarrotStations.RED_SIDE_DEPOT
+                              : HarvestHavocCarrotOnFly.CarrotStations.BLUE_SIDE_DEPOT)));
     }
 
     driverController.x().whileTrue(lockWheels);

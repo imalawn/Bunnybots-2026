@@ -6,7 +6,7 @@ import org.littletonrobotics.junction.AutoLog;
 @FunctionalInterface
 public interface LaserCanIO {
   @AutoLog
-  class LaserCanInputs {
+  class LaserCanIOInputs {
     public boolean connected;
     public boolean measurementValid;
     public double distanceMillimeters;
@@ -20,5 +20,5 @@ public interface LaserCanIO {
     };
   }
 
-  void updateInputs(LaserCanInputs inputs);
+  void updateInputs(LaserCanIOInputs inputs);
 }

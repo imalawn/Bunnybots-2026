@@ -14,6 +14,7 @@ import lombok.Getter;
 import org.ironmaple.simulation.IntakeSimulation;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.drivesims.SwerveDriveSimulation;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class SimulationHelper {
@@ -83,6 +84,7 @@ public class SimulationHelper {
         && indexer.getVelocityRPS() > 50
         && elevator.getSetpoint() == Elevator.Setpoint.STOWED) {
       outtakeLoaded = true;
+      Logger.recordOutput("FieldSimulation/IsOuttakeLoaded", outtakeLoaded);
     }
 
     Logger.recordOutput(
@@ -98,6 +100,7 @@ public class SimulationHelper {
   }
 
   /** Returns the total number of carrots in the robot. */
+  @AutoLogOutput(key = "FieldSimulation/NumCarrotsInBot")
   public int getNumHeldCarrots() {
     return intakeSimulation.getGamePiecesAmount();
   }
@@ -140,7 +143,7 @@ public class SimulationHelper {
     SimulatedArena.getInstance().addGamePieceProjectile(carrotOnFly);
   }
 
-  public void loadCarrot(HarvestHavocCarrotOnFly.CarrotStations side) {
+  public void dropCarrot(HarvestHavocCarrotOnFly.CarrotStations side) {
     HarvestHavocCarrotOnFly coralOnFly =
         HarvestHavocCarrotOnFly.dropFromCarrotStation(
             side, DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue));

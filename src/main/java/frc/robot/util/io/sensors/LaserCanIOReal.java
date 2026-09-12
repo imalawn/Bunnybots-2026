@@ -31,7 +31,7 @@ public class LaserCanIOReal implements LaserCanIO {
   }
 
   @Override
-  public void updateInputs(LaserCanInputs inputs) {
+  public void updateInputs(LaserCanIOInputs inputs) {
     LaserCanInterface.Measurement measurement = sensor.getMeasurement();
     if (measurement != null) {
       inputs.connected = true;
