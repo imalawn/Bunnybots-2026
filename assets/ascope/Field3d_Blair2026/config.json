@@ -47,13 +47,17 @@
       "rotations": [
         {
           "axis": "x",
+          "degrees": 0
+        },
+        {
+          "axis": "z",
           "degrees": 90
         }
       ],
       "position": [
-        0,
-        0,
-        0
+        0.15,
+        -5.39,
+        1.5
       ],
       "stagedObjects": [
         "Carrot_1",
@@ -69,12 +73,16 @@
       "rotations": [
         {
           "axis": "x",
+          "degrees": 0
+        },
+        {
+          "axis": "z",
           "degrees": 90
         }
       ],
       "position": [
-        0,
-        0,
+        0.4,
+        0.65,
         0
       ],
       "stagedObjects": [

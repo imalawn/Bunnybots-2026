@@ -39,8 +39,9 @@ public class HarvestHavocCarrotOnFly extends GamePieceProjectile {
   }
 
   public enum CarrotStations {
-    BLUE_RAMP(FieldConstants.BLUE_RAMP, Centimeters.of(57.659358)),
-    RED_RAMP(FieldConstants.RED_RAMP, Centimeters.of(57.659358)),
+    // robot relative rotation -> field relative rotation
+    BLUE_RAMP(FieldConstants.BLUE_RAMP.rotateBy(Rotation2d.kCCW_90deg), Centimeters.of(57.659358)),
+    RED_RAMP(FieldConstants.RED_RAMP.rotateBy(Rotation2d.kCCW_90deg), Centimeters.of(57.659358)),
     BLUE_REAR_DEPOT(FieldConstants.BLUE_REAR_DEPOT, Centimeters.of(57.383772)),
     BLUE_SIDE_DEPOT(FieldConstants.BLUE_SIDE_DEPOT, Centimeters.of(57.383772)),
     RED_REAR_DEPOT(FieldConstants.RED_REAR_DEPOT, Centimeters.of(57.383772)),

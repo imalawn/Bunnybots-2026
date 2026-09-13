@@ -234,12 +234,14 @@ public class RobotContainer {
     // Auto align to pantry (angle only)
     Command lockToAngle =
         DriveCommands.joystickDriveAtAngle(
-            drive,
-            () -> -driverController.getLeftY(),
-            () -> -driverController.getLeftX(),
-            () -> AutoAlign.getTargetPose().getRotation(),
-            // no feedforward
-            () -> 0);
+                drive,
+                () -> -driverController.getLeftY(),
+                () -> -driverController.getLeftX(),
+                () -> AutoAlign.getTargetPose().getRotation(),
+                // no feedforward
+                () -> 0)
+            .beforeStarting(() -> drive.setSpeedLimiter(true))
+            .finallyDo(() -> drive.setSpeedLimiter(false));
     // Auto align to pantry (locked angle and y)
     Command lockToPantry =
         DriveCommands.singleAxisJoystickDrive(
@@ -344,7 +346,7 @@ public class RobotContainer {
                               ? HarvestHavocCarrotOnFly.CarrotStations.RED_REAR_DEPOT
                               : HarvestHavocCarrotOnFly.CarrotStations.BLUE_REAR_DEPOT)));
       keyboard
-          .button(7)
+          .button(9)
           .onTrue(
               Commands.runOnce(
                   () ->
@@ -352,6 +354,7 @@ public class RobotContainer {
                           RobotUtil.isRedAlliance()
                               ? HarvestHavocCarrotOnFly.CarrotStations.RED_SIDE_DEPOT
                               : HarvestHavocCarrotOnFly.CarrotStations.BLUE_SIDE_DEPOT)));
+      keyboard.button(10).whileTrue(lockToPantry);
     }
 
     driverController.x().whileTrue(lockWheels);

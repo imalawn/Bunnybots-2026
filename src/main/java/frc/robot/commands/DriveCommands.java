@@ -202,6 +202,8 @@ public class DriveCommands {
     angleController.enableContinuousInput(-Math.PI, Math.PI);
     return Commands.run(
             () -> {
+              boolean isFlipped = RobotUtil.isRedAlliance();
+
               // Square x value for more precise control
               double x = xSupplier.getAsDouble();
               x = Math.copySign(x * x, x);
@@ -209,6 +211,7 @@ public class DriveCommands {
               // Calculate y speed
               double y =
                   yController.calculate(drive.getPose().getY(), yPositionSupplier.getAsDouble());
+              if (isFlipped) y *= -1;
 
               // Calculate angular speed
               double omega =
@@ -218,7 +221,6 @@ public class DriveCommands {
               // Convert to field relative speeds & send command
               ChassisSpeeds speeds =
                   new ChassisSpeeds(x * drive.getMaxLinearSpeedMetersPerSec(), y, omega);
-              boolean isFlipped = RobotUtil.isRedAlliance();
               drive.runVelocity(
                   ChassisSpeeds.fromFieldRelativeSpeeds(
                       speeds,

@@ -3,6 +3,7 @@ package frc.robot.util;
 import edu.wpi.first.math.geometry.Pose2d;
 import frc.robot.Constants;
 import lombok.Getter;
+import org.littletonrobotics.junction.Logger;
 
 public class AutoAlign {
   private AutoAlign() {
@@ -12,11 +13,11 @@ public class AutoAlign {
   @Getter private static Pose2d lastTarget = Pose2d.kZero;
 
   public static Pose2d getTargetPose() {
-    // lowkey not worthy of a whole method but whatever
     lastTarget =
         RobotUtil.isRedAlliance()
-            ? Constants.FieldConstants.RED_PANTRY
-            : Constants.FieldConstants.BLUE_PANTRY;
+            ? Constants.FieldConstants.RED_RAMP
+            : Constants.FieldConstants.BLUE_RAMP;
+    Logger.recordOutput("AutoAlign/TargetPose", lastTarget);
     return lastTarget;
   }
 }
