@@ -285,6 +285,7 @@ public class RobotContainer {
                 Commands.waitUntil(indexer::hasGamePiece)
                     .andThen(() -> RobotUtil.requestOperatorRumble(handoffFinished)));
     Command intakeFromGround = intake.intakeFromGround();
+    Command delayedIntakeStow = intake.delayedStow();
     Command stowIntake = intake.stow();
     Command reverseIntake = intake.reverse();
 
@@ -311,6 +312,9 @@ public class RobotContainer {
                     && elevator.getSetpoint().isForScoring
                     && !elevator.hasReachedSetpoint())
         .whileTrue(outtake.sterilize());
+
+    // stow intake once finished after a delay
+    new Trigger(intakeFromGround::isScheduled).onFalse(delayedIntakeStow);
 
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);
@@ -487,7 +491,8 @@ public class RobotContainer {
           .green()
           .and(guitarHeroControls)
           .and(downStrumBar)
-          .whileTrue(intakeFromGround);
+          .whileTrue(intakeFromGround)
+          .onFalse(intake.delayedStow());
       guitarHeroController
           .yellow()
           .and(guitarHeroControls)

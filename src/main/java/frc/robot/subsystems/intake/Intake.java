@@ -10,7 +10,6 @@ import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants;
 import frc.robot.util.io.motors.MotorIO;
@@ -129,16 +128,12 @@ public class Intake extends ExtendedSubsystem {
   }
 
   public Command intakeFromGround() {
-    Command delayedStow = Commands.waitSeconds(IntakeConstants.STOW_DELAY).andThen(stow());
     return startEnd(
         () -> {
           runSetpoint(PivotState.GROUND);
           roller.runVelocity(IntakeConstants.ROLLER_RPS);
         },
-        () -> {
-          roller.stop();
-          CommandScheduler.getInstance().schedule(delayedStow);
-        });
+        roller::stop);
   }
 
   public Command handoff() {
@@ -159,6 +154,10 @@ public class Intake extends ExtendedSubsystem {
 
   public Command stow() {
     return runOnce(this::reset);
+  }
+
+  public Command delayedStow() {
+    return Commands.waitSeconds(IntakeConstants.STOW_DELAY).andThen(stow());
   }
 
   public Command reverse() {
