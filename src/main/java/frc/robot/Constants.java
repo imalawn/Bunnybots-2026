@@ -94,9 +94,9 @@ public final class Constants {
         new Pose2d(new Translation2d(7.8135, -1.422).plus(ORIGIN), Rotation2d.k180deg);
 
     public static final Pose2d BLUE_RAMP =
-        new Pose2d(new Translation2d(6.013, -1.739).plus(ORIGIN), Rotation2d.k180deg);
-    public static final Pose2d RED_RAMP =
         new Pose2d(new Translation2d(-6.013, -1.739).plus(ORIGIN), Rotation2d.k180deg);
+    public static final Pose2d RED_RAMP =
+        new Pose2d(new Translation2d(6.013, -1.739).plus(ORIGIN), Rotation2d.kZero);
 
     public static final Pose2d BLUE_REAR_DEPOT = new Pose2d();
     public static final Pose2d BLUE_SIDE_DEPOT = new Pose2d();

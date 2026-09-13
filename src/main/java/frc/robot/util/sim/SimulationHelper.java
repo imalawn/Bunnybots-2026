@@ -139,14 +139,20 @@ public class SimulationHelper {
             Degrees.of(0 /* TODO put outtake angle here (static angle) */));
 
     carrotOnFly.enableBecomesGamePieceOnFieldAfterTouchGround();
-
+    carrotOnFly.withProjectileTrajectoryDisplayCallBack(
+        hitTrajectory ->
+            Logger.recordOutput(
+                "FieldSimulation/CarrotHitTrajectory", hitTrajectory.toArray(new Pose3d[0])),
+        missTrajectory ->
+            Logger.recordOutput(
+                "FieldSimulation/CarrotMissTrajectory", missTrajectory.toArray(new Pose3d[0])));
     SimulatedArena.getInstance().addGamePieceProjectile(carrotOnFly);
   }
 
   public void dropCarrot(HarvestHavocCarrotOnFly.CarrotStations side) {
-    HarvestHavocCarrotOnFly coralOnFly =
+    HarvestHavocCarrotOnFly carrotOnFly =
         HarvestHavocCarrotOnFly.dropFromCarrotStation(
             side, DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue));
-    SimulatedArena.getInstance().addGamePieceProjectile(coralOnFly);
+    SimulatedArena.getInstance().addGamePieceProjectile(carrotOnFly);
   }
 }

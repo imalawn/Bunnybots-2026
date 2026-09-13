@@ -14,8 +14,8 @@ public class HarvestHavocCarrotOnField extends GamePieceOnFieldSimulation {
           new Rectangle(Units.inchesToMeters(6), Units.inchesToMeters(18)),
           Inches.of(6),
           Kilograms.of(0.294),
-          0.5,
-          0.5,
+          2.8,
+          4,
           0.15);
 
   public HarvestHavocCarrotOnField(Pose2d initialPose) {
