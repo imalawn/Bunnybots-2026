@@ -4,7 +4,6 @@ import static edu.wpi.first.units.Units.*;
 
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.indexer.Indexer;
 import frc.robot.subsystems.intake.Intake;
@@ -150,9 +149,7 @@ public class SimulationHelper {
   }
 
   public void dropCarrot(HarvestHavocCarrotOnFly.CarrotStations side) {
-    HarvestHavocCarrotOnFly carrotOnFly =
-        HarvestHavocCarrotOnFly.dropFromCarrotStation(
-            side, DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue));
+    HarvestHavocCarrotOnFly carrotOnFly = HarvestHavocCarrotOnFly.dropFromCarrotStation(side);
     SimulatedArena.getInstance().addGamePieceProjectile(carrotOnFly);
   }
 }

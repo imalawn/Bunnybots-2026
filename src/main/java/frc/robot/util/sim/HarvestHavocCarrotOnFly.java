@@ -10,7 +10,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.LinearVelocity;
-import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants.FieldConstants;
 import org.ironmaple.simulation.SimulatedArena;
 import org.ironmaple.simulation.gamepieces.GamePieceOnFieldSimulation;
@@ -58,29 +57,36 @@ public class HarvestHavocCarrotOnFly extends GamePieceProjectile {
   public enum CarrotStations {
     BLUE_RAMP(
         new Pose2d(FieldConstants.BLUE_RAMP.getTranslation(), Rotation2d.kCW_90deg),
-        Centimeters.of(57.659358)),
+        Centimeters.of(57.659358),
+        new Translation2d(1.816, 0)),
     RED_RAMP(
         new Pose2d(FieldConstants.RED_RAMP.getTranslation(), Rotation2d.kCCW_90deg),
-        Centimeters.of(57.659358)),
-    BLUE_REAR_DEPOT(FieldConstants.BLUE_REAR_DEPOT, Centimeters.of(57.383772)),
-    BLUE_SIDE_DEPOT(FieldConstants.BLUE_SIDE_DEPOT, Centimeters.of(57.383772)),
-    RED_REAR_DEPOT(FieldConstants.RED_REAR_DEPOT, Centimeters.of(57.383772)),
-    RED_SIDE_DEPOT(FieldConstants.RED_SIDE_DEPOT, Centimeters.of(57.383772));
+        Centimeters.of(57.659358),
+        new Translation2d(-1.816, 0)),
+    BLUE_REAR_DEPOT(
+        FieldConstants.BLUE_REAR_DEPOT, Centimeters.of(57.383772), new Translation2d(1.816, 0)),
+    BLUE_SIDE_DEPOT(
+        FieldConstants.BLUE_SIDE_DEPOT, Centimeters.of(57.383772), new Translation2d(0, 1.816)),
+    RED_REAR_DEPOT(
+        FieldConstants.RED_REAR_DEPOT, Centimeters.of(57.383772), new Translation2d(-1.816, 0)),
+    RED_SIDE_DEPOT(
+        FieldConstants.RED_SIDE_DEPOT, Centimeters.of(57.383772), new Translation2d(0, -1.816));
 
     private final Pose2d startingPose;
     private final Distance height;
+    private final Translation2d droppingVelocity;
 
-    CarrotStations(Pose2d startingPose, Distance height) {
+    CarrotStations(Pose2d startingPose, Distance height, Translation2d droppingVelocity) {
       this.startingPose = startingPose;
       this.height = height;
+      this.droppingVelocity = droppingVelocity;
     }
   }
 
-  public static HarvestHavocCarrotOnFly dropFromCarrotStation(
-      CarrotStations station, DriverStation.Alliance alliance) {
+  public static HarvestHavocCarrotOnFly dropFromCarrotStation(CarrotStations station) {
     return new HarvestHavocCarrotOnFly(
         station.startingPose.getTranslation(),
-        new Translation2d(alliance == DriverStation.Alliance.Red ? -1.816 : 1.816, 0),
+        station.droppingVelocity,
         station.height.in(Meters),
         -0.4,
         new Rotation3d(station.startingPose.getRotation()));
