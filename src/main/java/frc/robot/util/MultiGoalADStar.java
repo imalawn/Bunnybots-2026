@@ -23,10 +23,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 /**
- * Implementation of AD* running locally in a background thread
+ * Implementation of AD* running locally in a background thread, that allows for multiple goals.
  *
  * <p>I would like to apologize to anyone trying to understand this code. The implementation I
  * translated it from was much worse.
+ *
+ * <p>I would like to apologize even more I made it even worse, Im so lost I wrote this entire thing
+ * in a trance - Alec
  */
 public class MultiGoalADStar implements Pathfinder {
   private static final double SMOOTHING_ANCHOR_PCT = 0.8;
