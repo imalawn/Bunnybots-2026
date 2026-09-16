@@ -317,7 +317,7 @@ public class Drive extends ExtendedSubsystem implements Vision.VisionConsumer {
   }
 
   /** Returns a command to drive to a specific pose. */
-  public Command driveToPose(Pose2d targetPose) {
+  public Command pathfindToPose(Pose2d targetPose) {
     return defer(
         () -> {
           Logger.recordOutput("Drive/TargetPose", targetPose);

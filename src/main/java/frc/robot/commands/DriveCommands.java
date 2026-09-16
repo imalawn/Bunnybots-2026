@@ -240,7 +240,6 @@ public class DriveCommands {
    * Can be used for snapping to an angle during an auto sequence.
    */
   public static Command aimAtAngle(Drive drive, Supplier<Rotation2d> rotationSupplier) {
-
     // Create PID controller
     ProfiledPIDController angleController =
         new ProfiledPIDController(
