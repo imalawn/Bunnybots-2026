@@ -2,13 +2,16 @@ package frc.robot.util.io.vision;
 
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.networktables.*;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionIO;
+import frc.robot.subsystems.vision.VisionIO.PoseObservation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -16,24 +19,18 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import edu.wpi.first.wpilibj.Timer;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIO.PoseObservation;
-
 /**
  * One EagleEye localization source: pose, quality metrics, and field-space detections.
  *
- * <p>Keys are supplied by robot code and are relative to the {@code EagleEye} table, so they
- * must match the {@code target_key} on the matching {@code publish_to_networktables} operation in
- * the WebUI character for character. A key that nothing publishes produces a Driver Station
- * warning rather than silence.
+ * <p>Keys are supplied by robot code and are relative to the {@code EagleEye} table, so they must
+ * match the {@code target_key} on the matching {@code publish_to_networktables} operation in the
+ * WebUI character for character. A key that nothing publishes produces a Driver Station warning
+ * rather than silence.
  *
- * <p>EagleEye stamps poses with source capture time (V4L2 exposure time when supported,
- * otherwise delivery time), and ntcore
- * translates that into roboRIO FPGA time on arrival. The timestamp on a received sample is
- * therefore already in the domain {@code addVisionMeasurement} expects: do not subtract a latency,
- * and do not use {@code Timer.getFPGATimestamp()} as the measurement time.
+ * <p>EagleEye stamps poses with source capture time (V4L2 exposure time when supported, otherwise
+ * delivery time), and ntcore translates that into roboRIO FPGA time on arrival. The timestamp on a
+ * received sample is therefore already in the domain {@code addVisionMeasurement} expects: do not
+ * subtract a latency, and do not use {@code Timer.getFPGATimestamp()} as the measurement time.
  *
  * <p>Typical use, in the subsystem that owns the pose estimator:
  *
@@ -129,8 +126,7 @@ public class EagleEyeCamera {
    * @return a camera reading all three source topics.
    */
   public static EagleEyeCamera forSource(String source) {
-    return new EagleEyeCamera(
-        source + "/pose", source + "/meta", source + "/detections");
+    return new EagleEyeCamera(source + "/pose", source + "/meta", source + "/detections");
   }
 
   /**
@@ -166,9 +162,9 @@ public class EagleEyeCamera {
     // 90 fps against a 50 Hz loop, a plain subscription throws away most of the measurements.
     var options =
         new PubSubOption[] {
-            PubSubOption.sendAll(true),
-            PubSubOption.keepDuplicates(true),
-            PubSubOption.pollStorage(POLL_STORAGE),
+          PubSubOption.sendAll(true),
+          PubSubOption.keepDuplicates(true),
+          PubSubOption.pollStorage(POLL_STORAGE),
         };
     poseSubscriber = table.getStructTopic(poseKey, Pose3d.struct).subscribe(new Pose3d(), options);
     metaSubscriber = table.getDoubleArrayTopic(metaKey).subscribe(new double[0], options);
@@ -210,14 +206,21 @@ public class EagleEyeCamera {
         unmatched.add(sample);
         continue;
       }
-      if (!Double.isFinite(meta[0]) || meta[0] != Math.rint(meta[0])
-          || meta[0] < 0 || meta[0] > Integer.MAX_VALUE
+      if (!Double.isFinite(meta[0])
+          || meta[0] != Math.rint(meta[0])
+          || meta[0] < 0
+          || meta[0] > Integer.MAX_VALUE
           || !Double.isFinite(sample.value.getZ())) {
         continue;
       }
       var observation =
-          new PoseObservation(sample.timestamp / 1e6,
-              sample.value, meta[2], (int) meta[0], meta[1], VisionIO.PoseObservationType.EAGLEEYE);
+          new PoseObservation(
+              sample.timestamp / 1e6,
+              sample.value,
+              meta[2],
+              (int) meta[0],
+              meta[1],
+              VisionIO.PoseObservationType.EAGLEEYE);
       if (isTrustworthy(observation)) {
         observations.add(observation);
         recentPoses.add(new CapturedPose(sample.timestamp, observation.pose().toPose2d()));
@@ -241,8 +244,8 @@ public class EagleEyeCamera {
   /**
    * Return the nearest game piece from the newest detection frame joined to an accepted pose.
    *
-   * <p>Call {@link #poll()} directly or {@link #update(Vision.VisionConsumer, EagleEyeCamera...)} first in
-   * the current robot loop so queued NetworkTables samples are drained.
+   * <p>Call {@link #poll()} directly or {@link #update(Vision.VisionConsumer, EagleEyeCamera...)}
+   * first in the current robot loop so queued NetworkTables samples are drained.
    *
    * @return the nearest field-space game piece, or empty before a joined detection frame arrives.
    */
@@ -361,8 +364,7 @@ public class EagleEyeCamera {
       lastWarningMicros = 0L;
       return;
     }
-    if (lastWarningMicros != 0L
-        && (nowMicros - lastWarningMicros) / 1e6 < warningIntervalSeconds) {
+    if (lastWarningMicros != 0L && (nowMicros - lastWarningMicros) / 1e6 < warningIntervalSeconds) {
       return;
     }
     lastWarningMicros = nowMicros;
@@ -419,7 +421,7 @@ public class EagleEyeCamera {
   /** Join detection frames to trustworthy poses using their exact capture timestamps. */
   private void joinDetections(long nowMicros) {
     for (Iterator<TimestampedStringArray> iterator = carriedDetections.iterator();
-         iterator.hasNext(); ) {
+        iterator.hasNext(); ) {
       TimestampedStringArray sample = iterator.next();
       Pose2d pose = poseAt(sample.timestamp);
       if (pose != null) {
@@ -467,7 +469,7 @@ public class EagleEyeCamera {
 
   private double[] takeMeta(long timestamp) {
     for (Iterator<TimestampedDoubleArray> iterator = carriedMetas.iterator();
-         iterator.hasNext(); ) {
+        iterator.hasNext(); ) {
       TimestampedDoubleArray meta = iterator.next();
       if (meta.timestamp == timestamp) {
         iterator.remove();

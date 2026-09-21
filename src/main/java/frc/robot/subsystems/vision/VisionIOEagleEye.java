@@ -7,18 +7,8 @@
 
 package frc.robot.subsystems.vision;
 
-import static frc.robot.subsystems.vision.VisionConstants.APRIL_TAG_LAYOUT;
-
-import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
 import frc.robot.util.io.vision.EagleEyeCamera;
-import org.photonvision.PhotonCamera;
+import java.util.List;
 
 /** IO implementation for real PhotonVision hardware. */
 public class VisionIOEagleEye implements VisionIO {
@@ -30,8 +20,11 @@ public class VisionIOEagleEye implements VisionIO {
    * @param key The target key of the camera in NetworkTables.
    */
   public VisionIOEagleEye(String key) {
-    camera = new EagleEyeCamera("heartbeat/" + key + "/time", "localization/" + key + "/pose",
-        "localization/" + key + "/meta");
+    camera =
+        new EagleEyeCamera(
+            "heartbeat/" + key + "/time",
+            "localization/" + key + "/pose",
+            "localization/" + key + "/meta");
   }
 
   @Override

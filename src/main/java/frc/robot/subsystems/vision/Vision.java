@@ -22,8 +22,6 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.vision.VisionIO.PoseObservationType;
 import java.util.LinkedList;
 import java.util.List;
-
-import frc.robot.util.io.vision.EagleEyeCamera;
 import org.littletonrobotics.junction.Logger;
 
 public class Vision extends SubsystemBase {
@@ -130,24 +128,24 @@ public class Vision extends SubsystemBase {
         }
 
         // Calculate standard deviations
-          double stdDevFactor =
-              Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
-          double linearStdDev = LINEAR_STD_DEV_BASELINE * stdDevFactor;
-          double angularStdDev = ANGULAR_STD_DEV_BASELINE * stdDevFactor;
-          if (observation.type() == PoseObservationType.MEGATAG_2) {
-            linearStdDev *= LINEAR_STD_DEV_MEGATAG_2_FACTOR;
-            angularStdDev *= ANGULAR_STD_DEV_MEGATAG_2_FACTOR;
-          }
-          if (cameraIndex < CAMERA_STD_DEV_FACTORS.length) {
-            linearStdDev *= CAMERA_STD_DEV_FACTORS[cameraIndex];
-            angularStdDev *= CAMERA_STD_DEV_FACTORS[cameraIndex];
-          }
+        double stdDevFactor =
+            Math.pow(observation.averageTagDistance(), 2.0) / observation.tagCount();
+        double linearStdDev = LINEAR_STD_DEV_BASELINE * stdDevFactor;
+        double angularStdDev = ANGULAR_STD_DEV_BASELINE * stdDevFactor;
+        if (observation.type() == PoseObservationType.MEGATAG_2) {
+          linearStdDev *= LINEAR_STD_DEV_MEGATAG_2_FACTOR;
+          angularStdDev *= ANGULAR_STD_DEV_MEGATAG_2_FACTOR;
+        }
+        if (cameraIndex < CAMERA_STD_DEV_FACTORS.length) {
+          linearStdDev *= CAMERA_STD_DEV_FACTORS[cameraIndex];
+          angularStdDev *= CAMERA_STD_DEV_FACTORS[cameraIndex];
+        }
 
-          // Send vision observation
-          consumer.accept(
-              observation.pose().toPose2d(),
-              observation.timestamp(),
-              VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
+        // Send vision observation
+        consumer.accept(
+            observation.pose().toPose2d(),
+            observation.timestamp(),
+            VecBuilder.fill(linearStdDev, linearStdDev, angularStdDev));
       }
 
       // Log camera metadata

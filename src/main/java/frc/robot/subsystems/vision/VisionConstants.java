@@ -21,12 +21,13 @@ public final class VisionConstants {
   }
 
   // Camera names, must match names configured on coprocessor
-  public static final String CAMERA_0_NAME = "Front";
-  public static final String CAMERA_1_NAME = "Side_Left";
-  public static final String CAMERA_2_NAME = "Side_Right";
+  public static final String CAMERA_0_NAME = "fl";
+  public static final String CAMERA_1_NAME = "fr";
+  public static final String CAMERA_2_NAME = "bl";
+  public static final String CAMERA_3_NAME = "br";
 
   // Robot to camera transforms
-  // (Not used by Limelight, configure in web UI instead)
+  // (Not used by EagleEye, configure in web UI instead)
   public static Transform3d CAMERA_0_OFFSET =
       new Transform3d(
           Units.inchesToMeters(13.69), // x, forward
@@ -46,6 +47,15 @@ public final class VisionConstants {
               Units.degreesToRadians(0.0), // pitch
               Units.degreesToRadians(90))); // yaw
   public static final Transform3d CAMERA_2_OFFSET =
+      new Transform3d(
+          Units.inchesToMeters(-0.5), // x, forward
+          Units.inchesToMeters(-13.421), // y, left
+          Units.inchesToMeters(7.75), // z, up
+          new Rotation3d(
+              Units.degreesToRadians(2.0), // roll
+              Units.degreesToRadians(0.0), // pitch
+              Units.degreesToRadians(-90))); // yaw
+  public static final Transform3d CAMERA_3_OFFSET =
       new Transform3d(
           Units.inchesToMeters(-0.5), // x, forward
           Units.inchesToMeters(-13.421), // y, left

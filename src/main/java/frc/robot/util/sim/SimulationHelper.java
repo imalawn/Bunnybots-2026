@@ -5,9 +5,8 @@ import static edu.wpi.first.units.Units.*;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.subsystems.gripper.Gripper;
+import frc.robot.subsystems.trader.Trader;
 import java.util.function.Supplier;
 import lombok.Getter;
 import org.ironmaple.simulation.IntakeSimulation;
@@ -23,46 +22,49 @@ public class SimulationHelper {
 
   public static SimulationHelper createInstance(
       Elevator elevator,
-      Intake intake,
-      Indexer indexer,
-      Outtake outtake,
+      Trader trader,
+      Gripper gripper,
       SwerveDriveSimulation driveSimulation,
       Supplier<ChassisSpeeds> chassisSpeeds) {
-    instance =
-        new SimulationHelper(elevator, intake, indexer, outtake, driveSimulation, chassisSpeeds);
+    instance = new SimulationHelper(elevator, trader, gripper, driveSimulation, chassisSpeeds);
     return instance;
   }
 
   private final Elevator elevator;
-  private final Intake intake;
-  private final Indexer indexer;
-  private final Outtake outtake;
+  private final Trader trader;
+  private final Gripper gripper;
   private final SwerveDriveSimulation driveSimulation;
   private final Supplier<ChassisSpeeds> chassisSpeeds;
-  private final IntakeSimulation intakeSimulation;
+  private final IntakeSimulation gripperIntake;
+  private final IntakeSimulation traderIntake;
 
   @Getter private boolean outtakeLoaded = false;
 
   private SimulationHelper(
       Elevator elevator,
-      Intake intake,
-      Indexer indexer,
-      Outtake outtake,
+      Trader trader,
+      Gripper gripper,
       SwerveDriveSimulation driveSimulation,
       Supplier<ChassisSpeeds> chassisSpeeds) {
     this.elevator = elevator;
-    this.intake = intake;
-    this.indexer = indexer;
-    this.outtake = outtake;
+    this.trader = trader;
+    this.gripper = gripper;
     this.driveSimulation = driveSimulation;
     this.chassisSpeeds = chassisSpeeds;
 
-    intakeSimulation =
-        IntakeSimulation.OverTheBumperIntake(
+    gripperIntake =
+        IntakeSimulation.InTheFrameIntake(
+            "Carrot",
+            driveSimulation,
+            Meters.of(0.5),
+            IntakeSimulation.IntakeSide.FRONT,
+            1
+            );
+    traderIntake =
+        IntakeSimulation.InTheFrameIntake(
             "Carrot",
             driveSimulation,
             Meters.of(0.7),
-            Meters.of(0.2),
             IntakeSimulation.IntakeSide.BACK,
             3);
   }
@@ -80,28 +82,17 @@ public class SimulationHelper {
 
     if (!outtakeLoaded
         && getNumHeldCarrots() > 0
-        && indexer.getVelocityRPS() > 50
+        && trader.getVelocityRPS() > 50
         && elevator.getSetpoint() == Elevator.Setpoint.STOWED) {
       outtakeLoaded = true;
       Logger.recordOutput("FieldSimulation/IsOuttakeLoaded", outtakeLoaded);
     }
-
-    Logger.recordOutput(
-        "FieldSimulation/RobotComponentPositions",
-        // elevator
-        new Pose3d(0.0, 0.0, elevator.getPositionMeters(), Rotation3d.kZero),
-        // intake
-        new Pose3d(
-            -0.305,
-            0,
-            0.23,
-            new Rotation3d(0, Math.toRadians(42.5 - intake.getPivotPosition()), 0)));
   }
 
   /** Returns the total number of carrots in the robot. */
   @AutoLogOutput(key = "FieldSimulation/NumCarrotsInBot")
   public int getNumHeldCarrots() {
-    return intakeSimulation.getGamePiecesAmount();
+    return gripperIntake.getGamePiecesAmount();
   }
 
   /** Returns the number of carrots in the robot's hopper (excludes carrot in outtake). */
@@ -111,7 +102,7 @@ public class SimulationHelper {
 
   /** Returns whether there is a game piece in the robot at all */
   public boolean hasAnyGamePiece() {
-    return intakeSimulation.getGamePiecesAmount() > 0;
+    return gripperIntake.getGamePiecesAmount() > 0;
   }
 
   public void score() {
@@ -119,7 +110,7 @@ public class SimulationHelper {
       return;
     }
 
-    intakeSimulation.obtainGamePieceFromIntake();
+    gripperIntake.obtainGamePieceFromIntake();
     outtakeLoaded = false;
 
     Pose3d globalPose = new Pose3d(driveSimulation.getSimulatedDriveTrainPose());

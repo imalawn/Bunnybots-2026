@@ -22,9 +22,8 @@ import frc.robot.commands.DriveCommands;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.drive.*;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.indexer.Indexer;
-import frc.robot.subsystems.intake.Intake;
-import frc.robot.subsystems.outtake.Outtake;
+import frc.robot.subsystems.gripper.Gripper;
+import frc.robot.subsystems.trader.Trader;
 import frc.robot.subsystems.vision.*;
 import frc.robot.util.*;
 import frc.robot.util.io.GuitarHeroController;
@@ -49,9 +48,8 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
   private final Elevator elevator;
-  private final Outtake outtake;
-  private final Indexer indexer;
-  private final Intake intake;
+  private final Gripper gripper;
+  private final Trader trader;
 
   // controllers
   private ControlScheme controlScheme = ControlScheme.MAIN;
@@ -88,16 +86,13 @@ public class RobotContainer {
         vision =
             new Vision(
                 drive,
-                new VisionIOPhotonVision(
-                    VisionConstants.CAMERA_0_NAME, VisionConstants.CAMERA_0_OFFSET),
-                new VisionIOPhotonVision(
-                    VisionConstants.CAMERA_1_NAME, VisionConstants.CAMERA_1_OFFSET),
-                new VisionIOPhotonVision(
-                    VisionConstants.CAMERA_2_NAME, VisionConstants.CAMERA_2_OFFSET));
+                new VisionIOEagleEye(VisionConstants.CAMERA_0_NAME),
+                new VisionIOEagleEye(VisionConstants.CAMERA_1_NAME),
+                new VisionIOEagleEye(VisionConstants.CAMERA_2_NAME),
+                new VisionIOEagleEye(VisionConstants.CAMERA_3_NAME));
         elevator = new Elevator();
-        outtake = new Outtake();
-        indexer = new Indexer();
-        intake = new Intake();
+        gripper = new Gripper();
+        trader = new Trader();
         sim = null;
       }
       case SIM -> {
@@ -130,14 +125,17 @@ public class RobotContainer {
                 new VisionIOPhotonVisionSim(
                     VisionConstants.CAMERA_2_NAME,
                     VisionConstants.CAMERA_2_OFFSET,
+                    driveSimulation::getSimulatedDriveTrainPose),
+                new VisionIOPhotonVisionSim(
+                    VisionConstants.CAMERA_3_NAME,
+                    VisionConstants.CAMERA_3_OFFSET,
                     driveSimulation::getSimulatedDriveTrainPose));
         elevator = new Elevator();
-        outtake = new Outtake();
-        indexer = new Indexer();
-        intake = new Intake();
+        gripper = new Gripper();
+        trader = new Trader();
         sim =
             SimulationHelper.createInstance(
-                elevator, intake, indexer, outtake, driveSimulation, drive::getChassisSpeeds);
+                elevator, trader, gripper, driveSimulation, drive::getChassisSpeeds);
       }
       default -> {
         /* REPLAY */
@@ -154,9 +152,8 @@ public class RobotContainer {
             new Vision(
                 drive, new VisionIO() {}, new VisionIO() {}, new VisionIO() {}, new VisionIO() {});
         elevator = new Elevator();
-        outtake = new Outtake();
-        indexer = new Indexer();
-        intake = new Intake();
+        gripper = new Gripper();
+        trader = new Trader();
         sim = null;
       }
     }
@@ -251,43 +248,34 @@ public class RobotContainer {
     /* Elevator commands */
     DoubleSupplier elevatorJoystick =
         () ->
-            -MathUtil.applyDeadband(
-                operatorController.getLeftY(), ControllerConstants.OPERATOR_DEADBAND);
+            Math.copySign(
+                Math.pow(
+                    MathUtil.applyDeadband(
+                        operatorController.getLeftY(), ControllerConstants.OPERATOR_DEADBAND),
+                    2),
+                -operatorController.getLeftY());
     Command manualElevator = elevator.manualControl(elevatorJoystick);
     Command elevatorHoming = elevator.homingSequence();
     Command stowElevator = elevator.stow();
     Command ovenElevator = elevator.oven();
     Command l1Elevator = elevator.l1();
     Command l2Elevator = elevator.l2();
+    Command l3Elevator = elevator.l3();
+    // emergency disable while true
+    Command disableElevator =
+        elevator.release().withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
 
-    /* Outtake commands */
-    Command ejectGamePiece = outtake.eject();
-    Command sterilizeGamePiece = outtake.sterilize();
-    Command reverseOuttake = outtake.reverse();
+    /* End effector commands */
+    Command gripperIntake = gripper.intake();
+    Command gripperEject = gripper.eject();
+    Command gripperSterilize = gripper.sterilize();
+    Command gripperHalt =
+        Commands.idle(gripper).withInterruptBehavior(Command.InterruptionBehavior.kCancelIncoming);
 
-    /* Indexer commands */
-    // manual override of trigger
-    Command indexerToOuttake =
-        Commands.waitUntil(
-                () ->
-                    elevator.getSetpoint() == Elevator.Setpoint.STOWED
-                        && elevator.hasReachedSetpoint())
-            .andThen(indexer.feed());
-    Command reverseIndexer = indexer.reverse();
-
-    /* Intake commands */
-    // handoff fully manual
-    RobotUtil.RumbleRequest handoffFinished = new RobotUtil.RumbleRequest(0, 0.8, 5);
-    Command intakeToIndexer =
-        intake
-            .handoff()
-            .alongWith(
-                Commands.waitUntil(indexer::hasGamePiece)
-                    .andThen(() -> RobotUtil.requestOperatorRumble(handoffFinished)));
-    Command intakeFromGround = intake.intakeFromGround();
-    Command delayedIntakeStow = intake.delayedStow();
-    Command stowIntake = intake.stow();
-    Command reverseIntake = intake.reverse();
+    /* Trader commands */
+    Command traderIntake = trader.intake();
+    Command traderEject = trader.eject();
+    Command traderSterilize = trader.sterilize();
 
     // Default command, normal field-relative drive
     useDefaultDrive();
@@ -295,36 +283,19 @@ public class RobotContainer {
     // elevator override
     new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0).whileTrue(manualElevator);
 
-    // queue game pieces in hopper
-    new Trigger(
-            () ->
-                indexer.hasGamePiece()
-                    && !outtake.hasGamePiece()
-                    && elevator.getSetpoint() == Elevator.Setpoint.STOWED
-                    && elevator.hasReachedSetpoint())
-        .debounce(0.1)
-        .whileTrue(indexer.feed());
-
     // sterilize held game piece
     new Trigger(
             () ->
-                outtake.hasGamePiece()
+                gripper.hasGamePiece()
                     && elevator.getSetpoint().isForScoring
                     && !elevator.hasReachedSetpoint())
-        .whileTrue(outtake.sterilize());
-
-    // stow intake once finished after a delay
-    new Trigger(intakeFromGround::isScheduled).onFalse(delayedIntakeStow);
+        .whileTrue(gripper.sterilize());
 
     if (currentMode == Constants.Mode.SIM) {
       CommandGenericHID keyboard = new CommandGenericHID(3);
 
-      keyboard.button(1).onTrue(l1Elevator);
-      keyboard.button(2).onTrue(l2Elevator);
-      keyboard.button(3).onTrue(ovenElevator);
-      keyboard.button(4).onTrue(stowElevator);
-      keyboard.button(5).whileTrue(intakeFromGround);
-      keyboard.button(6).whileTrue(ejectGamePiece);
+      // superstructure commands
+
       // drop carrots
       keyboard
           .button(7)
@@ -363,23 +334,6 @@ public class RobotContainer {
 
     /* operator controls */
     // main profile
-    operatorController.povDown().onTrue(stowElevator);
-    operatorController.povRight().onTrue(ovenElevator);
-    operatorController.povLeft().onTrue(l1Elevator);
-    operatorController.povUp().onTrue(l2Elevator);
-    operatorController.start().onTrue(elevatorHoming);
-
-    operatorController.b().whileTrue(ejectGamePiece);
-    operatorController.leftBumper().whileTrue(sterilizeGamePiece);
-    operatorController.y().whileTrue(reverseOuttake);
-
-    operatorController.rightTrigger(0.7).whileTrue(indexerToOuttake);
-    operatorController.leftTrigger(0.7).whileTrue(reverseIndexer);
-
-    operatorController.a().whileTrue(intakeFromGround);
-    operatorController.rightBumper().whileTrue(intakeToIndexer);
-    operatorController.x().whileTrue(reverseIntake);
-    operatorController.back().onTrue(stowIntake);
 
     // test mode (single controller)
 
@@ -411,36 +365,13 @@ public class RobotContainer {
       DoubleSupplier elevatorJoystick =
           () ->
               Math.copySign(
-                  MathUtil.applyDeadband(
-                      guitarHeroController.getWhammyBarAxis(),
-                      ControllerConstants.GUITAR_HERO_DEADBAND),
+                  Math.pow(
+                      MathUtil.applyDeadband(
+                          guitarHeroController.getStrumBarAxis(),
+                          ControllerConstants.GUITAR_HERO_DEADBAND),
+                      2),
                   // may need to add - to invert
                   guitarHeroController.getStrumBarAxis());
-      Command manualElevator = elevator.manualControl(elevatorJoystick);
-      Command elevatorHoming = elevator.homingSequence();
-      Command stowElevator = elevator.stow();
-      Command ovenElevator = elevator.oven();
-      Command l1Elevator = elevator.l1();
-      Command l2Elevator = elevator.l2();
-      /* Outtake commands */
-      Command ejectGamePiece = outtake.eject();
-      Command sterilizeGamePiece = outtake.sterilize();
-      Command reverseOuttake = outtake.reverse();
-      /* Indexer commands */
-      // manual override of trigger
-      Command indexerToOuttake =
-          Commands.waitUntil(
-                  () ->
-                      elevator.getSetpoint() == Elevator.Setpoint.STOWED
-                          && elevator.hasReachedSetpoint())
-              .andThen(indexer.feed());
-      Command reverseIndexer = indexer.reverse();
-      /* Intake commands */
-      // fully manual
-      Command intakeToIndexer = intake.handoff();
-      Command intakeFromGround = intake.intakeFromGround();
-      Command stowIntake = intake.stow();
-      Command reverseIntake = intake.reverse();
 
       // controls are only active during the correct mode
       BooleanSupplier guitarHeroControls = () -> controlScheme.isGuitarHero;
@@ -448,58 +379,13 @@ public class RobotContainer {
       BooleanSupplier upStrumBar = () -> guitarHeroController.getStrumBarAxis() > 0.5;
       BooleanSupplier downStrumBar = () -> guitarHeroController.getStrumBarAxis() < 0.5;
       BooleanSupplier neutralStrumBar =
-          () -> !upStrumBar.getAsBoolean() && !downStrumBar.getAsBoolean();
+          () ->
+              Math.abs(guitarHeroController.getStrumBarAxis())
+                  < ControllerConstants.GUITAR_HERO_DEADBAND;
 
       new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0)
           .and(guitarHeroControls)
-          .whileTrue(manualElevator);
-
-      guitarHeroController
-          .green()
-          .and(guitarHeroControls)
-          .and(neutralStrumBar)
-          .onTrue(stowElevator);
-      guitarHeroController.red().and(guitarHeroControls).and(neutralStrumBar).onTrue(ovenElevator);
-      guitarHeroController.yellow().and(guitarHeroControls).and(neutralStrumBar).onTrue(l1Elevator);
-      guitarHeroController.blue().and(guitarHeroControls).and(neutralStrumBar).onTrue(l2Elevator);
-      guitarHeroController.green().and(guitarHeroControls).and(upStrumBar).onTrue(elevatorHoming);
-
-      guitarHeroController
-          .red()
-          .and(guitarHeroControls)
-          .and(downStrumBar)
-          .whileTrue(ejectGamePiece);
-      guitarHeroController
-          .orange()
-          .and(guitarHeroControls)
-          .and(downStrumBar)
-          .whileTrue(sterilizeGamePiece);
-      guitarHeroController.red().and(guitarHeroControls).and(upStrumBar).whileTrue(reverseOuttake);
-
-      guitarHeroController
-          .blue()
-          .and(guitarHeroControls)
-          .and(downStrumBar)
-          .whileTrue(indexerToOuttake);
-      guitarHeroController
-          .yellow()
-          .and(guitarHeroControls)
-          .and(upStrumBar)
-          .whileTrue(reverseIndexer);
-
-      guitarHeroController
-          .green()
-          .and(guitarHeroControls)
-          .and(downStrumBar)
-          .whileTrue(intakeFromGround)
-          .onFalse(intake.delayedStow());
-      guitarHeroController
-          .yellow()
-          .and(guitarHeroControls)
-          .and(downStrumBar)
-          .whileTrue(intakeToIndexer);
-      guitarHeroController.blue().and(guitarHeroControls).and(upStrumBar).whileTrue(reverseIntake);
-      guitarHeroController.orange().and(guitarHeroControls).and(upStrumBar).whileTrue(stowIntake);
+          .whileTrue(elevator.manualControl(elevatorJoystick));
     }
 
     if (fullControl) {

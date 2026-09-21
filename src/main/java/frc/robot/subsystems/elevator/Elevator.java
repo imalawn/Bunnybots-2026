@@ -6,6 +6,8 @@ import static frc.robot.subsystems.elevator.ElevatorConstants.SETPOINTS;
 
 import com.ctre.phoenix6.signals.MotorAlignmentValue;
 import edu.wpi.first.math.filter.Debouncer;
+import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Timer;
@@ -28,7 +30,8 @@ public class Elevator extends ExtendedSubsystem {
     STOWED(false),
     OVEN(true),
     L1(true),
-    L2(true);
+    L2(true),
+    L3(true);
 
     public final boolean isForScoring;
 
@@ -112,6 +115,10 @@ public class Elevator extends ExtendedSubsystem {
     return startEnd(() -> runSetpoint(Setpoint.L2), () -> {}).until(this::hasReachedSetpoint);
   }
 
+  public Command l3() {
+    return startEnd(() -> runSetpoint(Setpoint.L3), () -> {}).until(this::hasReachedSetpoint);
+  }
+
   public Command manualControl(DoubleSupplier joystick) {
     return startRun(
             () -> {
@@ -157,6 +164,15 @@ public class Elevator extends ExtendedSubsystem {
             });
   }
 
+  public Command release() {
+    return startEnd(
+        () -> {
+          coastOverride = true;
+          elevator.stop();
+        },
+        () -> coastOverride = false);
+  }
+
   public double getPositionRad() {
     return elevator.getPositionRad();
   }
@@ -168,5 +184,13 @@ public class Elevator extends ExtendedSubsystem {
 
   public boolean hasReachedSetpoint() {
     return Math.abs(setpointRad - getPositionRad()) < ElevatorConstants.SETPOINT_TOLERANCE;
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    Logger.recordOutput(
+        "Elevator/RobotComponents",
+        // elevator
+        new Pose3d(0.0, 0.0, getPositionMeters(), Rotation3d.kZero));
   }
 }

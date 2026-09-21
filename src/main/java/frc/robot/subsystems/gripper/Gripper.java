@@ -2,7 +2,7 @@
 // Open Source Software; you can modify and/or share it under the terms of
 // the WPILib BSD license file in the root directory of this project.
 
-package frc.robot.subsystems.outtake;
+package frc.robot.subsystems.gripper;
 
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -19,26 +19,25 @@ import frc.robot.util.io.sensors.LaserCanIOReal;
 import frc.robot.util.sim.SimulationHelper;
 import org.littletonrobotics.junction.Logger;
 
-public class Outtake extends SubsystemBase {
+public class Gripper extends SubsystemBase {
   private final Roller leftRoller;
   private final Roller rightRoller;
   private final LaserCanIO beambreak;
   private final LaserCanIOInputsAutoLogged beambreakInputs = new LaserCanIOInputsAutoLogged();
 
-  public Outtake() {
+  public Gripper() {
     RollerIO leftIO =
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.OUTTAKE_LEFT,
-                  OuttakeConstants.MOTOR_CONFIG)
+                  Constants.CANConstants.GRIPPER_LEFT,
+                  GripperConstants.MOTOR_CONFIG)
               .build();
           case SIM -> new RollerIOSim(
               DCMotor.getKrakenX44(1),
-              new MotorIO.RotationalMechanismConstraints(
-                  1, OuttakeConstants.OUTTAKE_MOI, 0, 0, 0, 0),
-              OuttakeConstants.OUTTAKE_KP,
-              OuttakeConstants.OUTTAKE_KD,
+              new MotorIO.RotationalMechanismConstraints(1, GripperConstants.MOI, 0, 0, 0, 0),
+              GripperConstants.KP,
+              GripperConstants.KD,
               0);
           case REPLAY -> new RollerIO() {};
         };
@@ -46,27 +45,26 @@ public class Outtake extends SubsystemBase {
         switch (Constants.currentMode) {
           case REAL -> new MotorIOTalonFX.Builder(
                   Constants.CANConstants.SUPERSTRUCTURE,
-                  Constants.CANConstants.OUTTAKE_RIGHT,
-                  OuttakeConstants.MOTOR_CONFIG)
+                  Constants.CANConstants.GRIPPER_RIGHT,
+                  GripperConstants.MOTOR_CONFIG)
               .build();
           case SIM -> new RollerIOSim(
               DCMotor.getKrakenX44(1),
-              new MotorIO.RotationalMechanismConstraints(
-                  1, OuttakeConstants.OUTTAKE_MOI, 0, 0, 0, 0),
-              OuttakeConstants.OUTTAKE_KP,
-              OuttakeConstants.OUTTAKE_KD,
+              new MotorIO.RotationalMechanismConstraints(1, GripperConstants.MOI, 0, 0, 0, 0),
+              GripperConstants.KP,
+              GripperConstants.KD,
               0);
           case REPLAY -> new RollerIO() {};
         };
-    leftRoller = new Roller("Outtake/Left", leftIO);
-    rightRoller = new Roller("Outtake/Right", rightIO);
+    leftRoller = new Roller("Gripper/Left", leftIO);
+    rightRoller = new Roller("Gripper/Right", rightIO);
 
     beambreak =
         switch (Constants.currentMode) {
-          case REAL -> new LaserCanIOReal(Constants.CANConstants.OUTTAKE_LASERCAN);
+          case REAL -> new LaserCanIOReal(Constants.CANConstants.GRIPPER_LASERCAN);
           case SIM -> LaserCanIO.beambreakSim(
               () -> SimulationHelper.getInstance().isOuttakeLoaded(),
-              OuttakeConstants.BEAMBREAK_THRESHOLD);
+              GripperConstants.BEAMBREAK_THRESHOLD);
           case REPLAY -> inputs -> {};
         };
   }
@@ -76,7 +74,7 @@ public class Outtake extends SubsystemBase {
     leftRoller.periodic();
     rightRoller.periodic();
     beambreak.updateInputs(beambreakInputs);
-    Logger.processInputs("Outtake/DistanceSensor", beambreakInputs);
+    Logger.processInputs("Gripper/DistanceSensor", beambreakInputs);
   }
 
   private void runTogether(double rps) {
@@ -84,26 +82,26 @@ public class Outtake extends SubsystemBase {
     rightRoller.runVelocity(rps);
   }
 
+  private void runOpposed(double rps) {
+    leftRoller.runVelocity(rps);
+    rightRoller.runVelocity(-rps);
+  }
+
   private void stop() {
     leftRoller.stop();
     rightRoller.stop();
   }
 
+  public Command intake() {
+    return startEnd(() -> runTogether(-GripperConstants.RPS), this::stop);
+  }
+
   public Command sterilize() {
-    return startEnd(
-        () -> {
-          leftRoller.runVelocity(OuttakeConstants.STERILIZATION_RPS);
-          rightRoller.runVelocity(-OuttakeConstants.STERILIZATION_RPS);
-        },
-        this::stop);
+    return startEnd(() -> runOpposed(GripperConstants.STERILIZATION_RPS), this::stop);
   }
 
   public Command eject() {
-    return startEnd(() -> runTogether(OuttakeConstants.RPS), this::stop);
-  }
-
-  public Command reverse() {
-    return startEnd(() -> runTogether(OuttakeConstants.REVERSED_RPS), this::stop);
+    return startEnd(() -> runTogether(GripperConstants.RPS), this::stop);
   }
 
   public double getVelocityRPS() {
@@ -112,6 +110,6 @@ public class Outtake extends SubsystemBase {
 
   public boolean hasGamePiece() {
     return beambreakInputs.measurementValid
-        && beambreakInputs.distanceMillimeters <= OuttakeConstants.BEAMBREAK_THRESHOLD;
+        && beambreakInputs.distanceMillimeters <= GripperConstants.BEAMBREAK_THRESHOLD;
   }
 }
