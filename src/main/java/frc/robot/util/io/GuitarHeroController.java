@@ -15,10 +15,9 @@ public class GuitarHeroController extends CommandGenericHID {
   public enum Button {
     GREEN_FRET(1),
     RED_FRET(2),
-    YELLOW_FRET(3),
-    BLUE_FRET(4),
-    ORANGE_FRET(5),
-    JOYSTICK(6);
+    YELLOW_FRET(4),
+    BLUE_FRET(3),
+    ORANGE_FRET(5);
 
     /** Button value. */
     public final int value;
@@ -30,10 +29,9 @@ public class GuitarHeroController extends CommandGenericHID {
 
   /** Represents an axis on a GuitarHeroController */
   public enum Axis {
-    JOYSTICK_X(0),
-    JOYSTICK_Y(1),
-    STRUM_BAR(2),
-    WHAMMY_BAR(3);
+    // strum bar is represented as a pov
+    WHAMMY_BAR(4),
+    TILT(5);
 
     /** Axis value. */
     public final int value;
@@ -108,47 +106,11 @@ public class GuitarHeroController extends CommandGenericHID {
   }
 
   /**
-   * Constructs a Trigger instance around the analog stick button's digital signal.
-   *
-   * @return a Trigger instance representing the analog stick button's digital signal attached to
-   *     the {@link CommandScheduler#getDefaultButtonLoop() default scheduler button loop}.
-   */
-  public Trigger joystick() {
-    return button(Button.JOYSTICK.value);
-  }
-
-  /**
-   * Constructs a Trigger instance that is true when the strum bar axis magnitude value is greater
-   * than {@code threshold}, attached to {@link CommandScheduler#getDefaultButtonLoop() the default
-   * command scheduler button loop}.
-   *
-   * @param threshold The value above which this trigger should return true.
-   * @return a Trigger instance that is true when the axis magnitude value is greater than the
-   *     provided threshold.
-   * @see CommandGenericHID#axisMagnitudeGreaterThan(int, double)
-   */
-  public Trigger strumBar(double threshold) {
-    return axisMagnitudeGreaterThan(Axis.STRUM_BAR.value, threshold);
-  }
-
-  /**
-   * Constructs a Trigger instance around the axis value of the strum bar. The returned trigger will
-   * be true when the axis magnitude value is greater than 0.5.
-   *
-   * @return a Trigger instance that is true when the strum bar's axis magnitude exceeds 0.5,
-   *     attached to the {@link CommandScheduler#getDefaultButtonLoop() default scheduler button
-   *     loop}.
-   */
-  public Trigger strumBar() {
-    return strumBar(0.5);
-  }
-
-  /**
    * Constructs a Trigger instance around the axis value of the whammy bar. The returned trigger
    * will be true when the axis value is greater than {@code threshold}.
    *
    * @param threshold the minimum axis value for the returned {@link Trigger} to be true. This value
-   *     should be in the range [0, 1] where 0 is the unpressed state of the axis.
+   *     should be in the range [-1, 1] where -1 is the unpressed state of the axis.
    * @return a Trigger instance that is true when the whammy bar's axis exceeds the provided
    *     threshold, attached to the {@link CommandScheduler#getDefaultButtonLoop() default scheduler
    *     button loop}.
@@ -169,39 +131,46 @@ public class GuitarHeroController extends CommandGenericHID {
   }
 
   /**
-   * Get the X axis value of the analog stick of the controller. Right is positive.
+   * Constructs a Trigger instance around the axis value of the guitar's tilt. The returned trigger
+   * will be true when the axis value is greater than {@code threshold}.
    *
-   * @return The axis value.
+   * @param threshold the minimum axis value for the returned {@link Trigger} to be true. This value
+   *     should be in the range [-1, 1] where -1 is the unpressed state of the axis.
+   * @return a Trigger instance that is true when the tilt's axis exceeds the provided threshold,
+   *     attached to the {@link CommandScheduler#getDefaultButtonLoop() default scheduler button
+   *     loop}.
    */
-  public double getJoystickX() {
-    return getRawAxis(Axis.JOYSTICK_X.value);
+  public Trigger tilt(double threshold) {
+    return axisGreaterThan(Axis.TILT.value, threshold);
   }
 
   /**
-   * Get the Y axis value of the analog stick of the controller. Back is positive.
+   * Constructs a Trigger instance around the axis value of the guitar's tilt. The returned trigger
+   * will be true when the axis value is greater than 0.5.
    *
-   * @return The axis value.
+   * @return a Trigger instance that is true when the tilt's axis exceeds 0.5, attached to the
+   *     {@link CommandScheduler#getDefaultButtonLoop() default scheduler button loop}.
    */
-  public double getJoystickY() {
-    return getRawAxis(Axis.JOYSTICK_Y.value);
+  public Trigger tilt() {
+    return tilt(0.5);
   }
 
   /**
-   * Get the strum bar axis value of the controller.
-   *
-   * @return The axis value bound to the range of [-1, 1].
-   */
-  public double getStrumBarAxis() {
-    return getRawAxis(Axis.STRUM_BAR.value);
-  }
-
-  /**
-   * Get the whammy bar axis value of the controller. Note that this axis is bound to the range of
-   * [0, 1] as opposed to the usual [-1, 1].
+   * Get the whammy bar axis value of the controller. Although this is represented as a floating
+   * point number, the whammy bar only has two states (-1 and 0.98).
    *
    * @return The axis value.
    */
   public double getWhammyBarAxis() {
     return getRawAxis(Axis.WHAMMY_BAR.value);
+  }
+
+  /**
+   * Get the tilt axis value of the controller. This is bound by [0.19, 1].
+   *
+   * @return The axis value.
+   */
+  public double getTiltAxis() {
+    return getRawAxis(Axis.TILT.value);
   }
 }

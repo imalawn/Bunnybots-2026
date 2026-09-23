@@ -54,19 +54,10 @@ public class SimulationHelper {
 
     gripperIntake =
         IntakeSimulation.InTheFrameIntake(
-            "Carrot",
-            driveSimulation,
-            Meters.of(0.5),
-            IntakeSimulation.IntakeSide.FRONT,
-            1
-            );
+            "Carrot", driveSimulation, Meters.of(0.5), IntakeSimulation.IntakeSide.FRONT, 1);
     traderIntake =
         IntakeSimulation.InTheFrameIntake(
-            "Carrot",
-            driveSimulation,
-            Meters.of(0.7),
-            IntakeSimulation.IntakeSide.BACK,
-            3);
+            "Carrot", driveSimulation, Meters.of(0.7), IntakeSimulation.IntakeSide.BACK, 3);
   }
 
   public void simulationPeriodic() {

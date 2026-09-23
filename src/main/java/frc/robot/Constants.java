@@ -39,16 +39,9 @@ public final class Constants {
   }
 
   public enum ControlScheme {
-    MAIN(false),
-    TEST(false),
-    GUITAR_HERO_OP(true),
-    GUITAR_HERO_FULL(true);
-
-    public final boolean isGuitarHero;
-
-    ControlScheme(boolean isGuitarHero) {
-      this.isGuitarHero = isGuitarHero;
-    }
+    MAIN,
+    TEST,
+    GUITAR_HERO
   }
 
   public static final class ControllerConstants {

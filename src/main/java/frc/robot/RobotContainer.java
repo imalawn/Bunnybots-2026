@@ -59,10 +59,6 @@ public class RobotContainer {
       new CommandXboxController(ControllerConstants.OPERATOR_CONTROLLER_PORT);
   private GuitarHeroController guitarHeroController;
 
-  // default drive commands
-  private Command defaultDriveCommand;
-  private Command guitarHeroDriveCommand;
-
   // dashboard inputs
   private final LoggedDashboardChooser<Command> autoChooser;
 
@@ -164,7 +160,7 @@ public class RobotContainer {
     LoggedDashboardChooser<ControlScheme> controlProfiles =
         new LoggedDashboardChooser<>("Control Profile");
     controlProfiles.addDefaultOption("Main", ControlScheme.MAIN);
-    controlProfiles.addOption("Guitar Hero Operator", ControlScheme.GUITAR_HERO_OP);
+    controlProfiles.addOption("Guitar Hero Operator", ControlScheme.GUITAR_HERO);
     //    controlProfiles.addOption("Guitar Hero Full Control", ControlScheme.GUITAR_HERO_FULL);
     controlProfiles.addOption("Testing", ControlScheme.TEST);
     controlProfiles.onChange(this::setControlScheme);
@@ -278,7 +274,13 @@ public class RobotContainer {
     Command traderSterilize = trader.sterilize();
 
     // Default command, normal field-relative drive
-    useDefaultDrive();
+    Command defaultDriveCommand =
+        DriveCommands.joystickDrive(
+            drive,
+            () -> -driverController.getLeftY(),
+            () -> -driverController.getLeftX(),
+            () -> -driverController.getRightX());
+    drive.setDefaultCommand(defaultDriveCommand);
 
     // elevator override
     new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0).whileTrue(manualElevator);
@@ -342,19 +344,13 @@ public class RobotContainer {
   private void configureAutoCommands() {}
 
   public void setControlScheme(ControlScheme newScheme) {
-    switch (newScheme) {
-      case GUITAR_HERO_OP -> configureGuitarHeroController(false);
-      case GUITAR_HERO_FULL -> configureGuitarHeroController(true);
-      default -> {
-        if (controlScheme == ControlScheme.GUITAR_HERO_FULL) {
-          useDefaultDrive();
-        }
-      }
+    if (newScheme == ControlScheme.GUITAR_HERO) {
+      configureGuitarHeroController();
     }
     controlScheme = newScheme;
   }
 
-  private void configureGuitarHeroController(boolean fullControl) {
+  private void configureGuitarHeroController() {
     if (guitarHeroController == null) {
       // lazy instantiation
       guitarHeroController =
@@ -362,65 +358,15 @@ public class RobotContainer {
 
       // configure triggers only once
       /* Elevator commands */
-      DoubleSupplier elevatorJoystick =
-          () ->
-              Math.copySign(
-                  Math.pow(
-                      MathUtil.applyDeadband(
-                          guitarHeroController.getStrumBarAxis(),
-                          ControllerConstants.GUITAR_HERO_DEADBAND),
-                      2),
-                  // may need to add - to invert
-                  guitarHeroController.getStrumBarAxis());
 
       // controls are only active during the correct mode
-      BooleanSupplier guitarHeroControls = () -> controlScheme.isGuitarHero;
-      // up and down may need swapping
-      BooleanSupplier upStrumBar = () -> guitarHeroController.getStrumBarAxis() > 0.5;
-      BooleanSupplier downStrumBar = () -> guitarHeroController.getStrumBarAxis() < 0.5;
+      BooleanSupplier guitarHeroControls = () -> controlScheme == ControlScheme.GUITAR_HERO;
+      // devious strum bar combinations
+      BooleanSupplier upStrumBar = guitarHeroController.povUp();
+      BooleanSupplier downStrumBar = guitarHeroController.povDown();
       BooleanSupplier neutralStrumBar =
-          () ->
-              Math.abs(guitarHeroController.getStrumBarAxis())
-                  < ControllerConstants.GUITAR_HERO_DEADBAND;
-
-      new Trigger(() -> elevatorJoystick.getAsDouble() != 0.0)
-          .and(guitarHeroControls)
-          .whileTrue(elevator.manualControl(elevatorJoystick));
+          () -> !upStrumBar.getAsBoolean() && !downStrumBar.getAsBoolean();
     }
-
-    if (fullControl) {
-      useGuitarHeroDrive();
-    } else {
-      useDefaultDrive();
-    }
-  }
-
-  private void useDefaultDrive() {
-    if (defaultDriveCommand == null) {
-      defaultDriveCommand =
-          DriveCommands.joystickDrive(
-              drive,
-              () -> -driverController.getLeftY(),
-              () -> -driverController.getLeftX(),
-              () -> -driverController.getRightX());
-    }
-    drive.setDefaultCommand(defaultDriveCommand);
-    Command currentDriveCommand = drive.getCurrentCommand();
-    if (currentDriveCommand != null) currentDriveCommand.cancel();
-  }
-
-  private void useGuitarHeroDrive() {
-    if (guitarHeroDriveCommand == null) {
-      guitarHeroDriveCommand =
-          DriveCommands.joystickDrive(
-              drive,
-              () -> -guitarHeroController.getJoystickY(),
-              () -> -guitarHeroController.getJoystickX(),
-              () -> -guitarHeroController.getStrumBarAxis());
-    }
-    drive.setDefaultCommand(guitarHeroDriveCommand);
-    Command currentDriveCommand = drive.getCurrentCommand();
-    if (currentDriveCommand != null) currentDriveCommand.cancel();
   }
 
   /**
