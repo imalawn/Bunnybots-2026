@@ -18,7 +18,7 @@ import frc.robot.util.PhoenixUtil;
 import frc.robot.util.io.motors.elevator.LinearSystemIO;
 import frc.robot.util.io.motors.pivot.PivotIO;
 import frc.robot.util.io.motors.roller.RollerIO;
-import frc.robot.util.io.sensors.EncoderIOCANcoder;
+import frc.robot.util.io.sensors.encoder.EncoderIOCANcoder;
 import java.util.ArrayList;
 
 public class MotorIOTalonFX implements AutoCloseable, RollerIO, PivotIO, LinearSystemIO {

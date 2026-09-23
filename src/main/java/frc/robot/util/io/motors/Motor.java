@@ -2,8 +2,8 @@ package frc.robot.util.io.motors;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.Alert;
-import frc.robot.util.io.sensors.EncoderIO;
-import frc.robot.util.io.sensors.EncoderIOInputsAutoLogged;
+import frc.robot.util.io.sensors.encoder.EncoderIO;
+import frc.robot.util.io.sensors.encoder.EncoderIOInputsAutoLogged;
 import java.util.function.BooleanSupplier;
 import lombok.Getter;
 import org.littletonrobotics.junction.Logger;

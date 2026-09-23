@@ -1,4 +1,4 @@
-package frc.robot.util.io.sensors;
+package frc.robot.util.io.sensors.lasercan;
 
 import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.AutoLog;

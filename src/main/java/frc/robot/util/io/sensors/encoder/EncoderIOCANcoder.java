@@ -1,4 +1,4 @@
-package frc.robot.util.io.sensors;
+package frc.robot.util.io.sensors.encoder;
 
 import static frc.robot.util.PhoenixUtil.tryUntilOk;
 

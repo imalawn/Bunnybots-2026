@@ -7,7 +7,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import frc.robot.util.io.motors.Motor;
 import frc.robot.util.io.motors.MotorIO;
-import frc.robot.util.io.sensors.EncoderIO;
+import frc.robot.util.io.sensors.encoder.EncoderIO;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
 import org.littletonrobotics.junction.Logger;

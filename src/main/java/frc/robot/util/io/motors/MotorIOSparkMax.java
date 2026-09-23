@@ -19,7 +19,7 @@ import edu.wpi.first.units.measure.Angle;
 import frc.robot.util.io.motors.elevator.LinearSystemIO;
 import frc.robot.util.io.motors.pivot.PivotIO;
 import frc.robot.util.io.motors.roller.RollerIO;
-import frc.robot.util.io.sensors.EncoderIO;
+import frc.robot.util.io.sensors.encoder.EncoderIO;
 
 public class MotorIOSparkMax implements RollerIO, PivotIO, LinearSystemIO {
   private static final SparkBaseConfig coastConfig =

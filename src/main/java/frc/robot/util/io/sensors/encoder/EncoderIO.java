@@ -1,4 +1,4 @@
-package frc.robot.util.io.sensors;
+package frc.robot.util.io.sensors.encoder;
 
 import static edu.wpi.first.units.Units.Rotations;
 

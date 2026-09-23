@@ -1,4 +1,4 @@
-package frc.robot.util.io.sensors;
+package frc.robot.util.io.sensors.lasercan;
 
 import au.grapplerobotics.ConfigurationFailedException;
 import au.grapplerobotics.LaserCan;
